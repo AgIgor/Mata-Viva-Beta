@@ -1608,7 +1608,17 @@ const actBtn=document.getElementById('act'),actV=document.getElementById('actV')
 let vw=0,vh=0,DPR=1,zoom=1,baseZoom=1,userZ=1,time=0,wind=.35,DT=.016;
 let caveD=0,ACT=null,farmI=-1,parts=[],floats=[],target=null,near=null,wadeD=0,arrows=[],animals=[],prey=null,foe=null;
 const act={hold:false,tap:false,cd:0,swing:0,tool:null};
-let bmode=null,bcur=-1,bvalid=false,pick={i:-1,t:-99},mouseIn=false,smokes=[],glows=[],tap=null;
+let bmode=null,bcur=-1,bvalid=false,pick={i:-1,t:-99},mouseIn=false,smokes=[],glows=[],tap=null,fpick={i:-1,t:-99},fdown=false,flast=-1,fcur=-1,fvalid=false;
+function farmPiece(eq){if(!eq)return 0;if(eq==='enxada')return 40;if(SEEDK[eq])return SEEDK[eq];if(eq==='adubo')return 45;if(eq==='farinha_osso')return 46;if(SAPL[eq])return'sow';return 0}
+function farmOk(fp,i){if(i<0)return false;if(fp==='sow'){const tx=i%W,ty=(i/W)|0;return Math.hypot((tx+.5)*T-P.x,(ty+.5)*T-P.y)<=3.3*T&&canSow(i)}return canPlace(pieceByK(fp),i)}
+function farmWhy(fp,i){const tx=i%W,ty=(i/W)|0;if(Math.hypot((tx+.5)*T-P.x,(ty+.5)*T-P.y)>3.3*T)return'Longe demais: chegue mais perto';
+  if(fp==='sow')return'Precisa de chão livre, longe de árvores grandes';if(fp===40)return soilG[i]?'Já está arado':'Lugar ocupado';
+  if(fp===45||fp===46){const c=crops.get(i);return!c?'Só em plantação':c.ripe?'Já está pronto: colha':'Já adubado'}
+  return!soilG[i]?'Are a terra antes, com a enxada':crops.has(i)?'Já tem plantação aqui':'Não dá para plantar aqui'}
+function farmAt(i,quiet){const eq=equipped(),fp=farmPiece(eq);if(!fp||bmode||i<0)return false;
+  if(!farmOk(fp,i)){if(!quiet){const tx=i%W,ty=(i/W)|0;floats.push({x:(tx+.5)*T,y:ty*T,text:farmWhy(fp,i),life:1.6})}return false}
+  const dx=((i%W)+.5)*T-P.x,dy=(((i/W)|0)+.5)*T-P.y;if(Math.abs(dx)>Math.abs(dy))P.dir=dx>0?'right':'left';else P.dir=dy>0?'down':'up';
+  if(fp==='sow')dispatch({t:'sow',id:eq,i});else dispatch({t:'build',k:fp,i});act.swing=1;act.tool=eq==='enxada'?'enxada':null;audio();return true}
 const buildEl=document.getElementById('build'),piecesEl=document.getElementById('pieces'),buildbar=document.getElementById('buildbar');
 const faintEl=document.getElementById('faint'),tipEl=document.getElementById('tip'),chipsEl=document.getElementById('chips');
 let rustleT=0,lastCraftCtx='',warned={},nearFire=false,nearWaterC=false,saveT=0,scanT=0;
@@ -1655,6 +1665,7 @@ function endJoy(){joy.on=false;joy.id=null;joy.dx=joy.dy=0;joyEl.hidden=true}
 function screenTile(sx,sy){const wx=(sx-vw/2)/zoom+cam.x,wy=(sy-vh/2)/zoom+cam.y,tx=Math.floor(wx/T),ty=Math.floor(wy/T);return tx<0||ty<0||tx>=W||ty>=H?-1:ty*W+tx}
 cv.addEventListener('pointerdown',e=>{
   if(bmode&&e.pointerType==='mouse'){if(e.button!==0)return;const i=screenTile(e.clientX,e.clientY);pick={i,t:time};audio();placeAt(i);return}
+  if(!bmode&&e.pointerType==='mouse'&&e.button===0&&farmPiece(equipped())){const i=screenTile(e.clientX,e.clientY);fpick={i,t:time};fdown=true;flast=i;farmAt(i);return}
   tap={id:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now()};
   ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});try{cv.setPointerCapture(e.pointerId)}catch(_){}
   if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
@@ -1664,12 +1675,15 @@ cv.addEventListener('pointerdown',e=>{
 cv.addEventListener('pointerleave',()=>{mouseIn=false});
 cv.addEventListener('pointermove',e=>{
   if(bmode&&e.pointerType==='mouse'){mouseIn=true;pick={i:screenTile(e.clientX,e.clientY),t:time}}
+  if(!bmode&&e.pointerType==='mouse'){const i=screenTile(e.clientX,e.clientY);mouseIn=true;fpick={i,t:time};if(fdown&&(e.buttons&1)&&i!==flast){flast=i;farmAt(i,true)}}
   if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(pinch&&ptrs.size>=2){const[a,b]=[...ptrs.values()];userZ=clamp(pinch.z*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d,.5,2);applyZoom();return}
   if(!joy.on||e.pointerId!==joy.id)return;joy.dx=e.clientX-joy.ox;joy.dy=e.clientY-joy.oy;const m=Math.hypot(joy.dx,joy.dy);if(m>56){joy.dx*=56/m;joy.dy*=56/m}knob.style.transform=`translate(${joy.dx}px,${joy.dy}px)`;
 });
 const ptrUp=e=>{
   if(bmode&&tap&&tap.id===e.pointerId&&performance.now()-tap.t<320&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<12)pick={i:screenTile(e.clientX,e.clientY),t:time};
+  if(!bmode&&e.pointerType!=='mouse'&&tap&&tap.id===e.pointerId&&performance.now()-tap.t<320&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<12&&farmPiece(equipped())){const i=screenTile(e.clientX,e.clientY);fpick={i,t:time};farmAt(i)}
+  if(e.pointerType==='mouse')fdown=false;
   if(tap&&tap.id===e.pointerId)tap=null;
   ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;if(e.pointerId===joy.id)endJoy()};
 cv.addEventListener('pointerup',ptrUp);cv.addEventListener('pointercancel',ptrUp);
@@ -2471,7 +2485,7 @@ function sleep(i){
   if(!canSleep()||blockG[i]!==6||fainted)return;act.hold=false;sleepFx.style.opacity=1;
   setTimeout(()=>{
     const skip=((6.2/24-dayT+1)%1)*DAYLEN/2;for(let t=0;t<skip;t+=1){stepFurnaces(1);stepMachines(1);stepLogistics(1);stepFarms(1)}
-    if(hours()>=12)dayN++;dayT=6.2/24;addStat('energia',100);addStat('fome',-12);addStat('sede',-15);addStat('vida',25);ST.molhado=0;bedSpawn=i;
+    if(hours()>=12)dayN++;dayT=6.2/24;addStat('energia',100);addStat('fome',-7);addStat('sede',-9);addStat('vida',25);ST.molhado=0;bedSpawn=i;
     floats.push({x:P.x,y:P.y-72,text:`Dia ${dayN} · descansado`,life:2.2});save();updateBar();sleepFx.style.opacity=0},750);
 }
 function respawnPos(){
@@ -2546,7 +2560,7 @@ function hit(o,want){
   const t=TYPES[o.type];if(o.hp==null)o.hp=t.hp;
   const dx=o.x-P.x,dy=o.y-P.y;if(Math.abs(dx)>Math.abs(dy))P.dir=dx>0?'right':'left';else P.dir=dy>0?'down':'up';
   const tool=want&&inv[want]>0&&TOOLS[want]&&TOOLS[want].fam===t.tool?want:null;act.tool=tool;act.cd=tool?.34:.42;
-  o.hp=Math.max(0,o.hp-(tool?TOOLS[tool].dmg:1));o.shake=.25;addStat('energia',-1.2);addStat('fome',-.12);burst(o,tool?9:7,false);play(t.snd);
+  o.hp=Math.max(0,o.hp-(tool?TOOLS[tool].dmg:1));o.shake=.25;addStat('energia',-1.2);addStat('fome',-.04);burst(o,tool?9:7,false);play(t.snd);
   if(tool){wear[tool]=wearOf(tool)-1;
     if(wear[tool]<=0){inv[tool]--;if(inv[tool]<=0)delete inv[tool];wear[tool]=TOOLS[tool].max;floats.push({x:P.x,y:P.y-72,text:`${ITEMS[tool]} quebrou`,life:1.8});setTimeout(()=>play('break'),60)}
     updateBar();if(o.hp>0)save()}
@@ -2620,22 +2634,22 @@ function update(dt){
     for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){const q=(ty+j)*W+tx+i;if(q>=0&&q<W*H&&blockG[q]===3&&!(rainI>.3&&!roofG[q])&&Math.hypot((tx+i+.5)*T-P.x,(ty+j+.5)*T-P.y)<2.6*T)nearFire=true}}
   const sheltered=!!roofG[Math.floor(P.y/T)*W+Math.floor(P.x/T)],running=run&&spd>160;
   if(!fainted){
-    const dryHeat=biome[Math.floor(P.y/T)*W+Math.floor(P.x/T)]===2&&rainI<.2?.07:0;
-    addStat('fome',-dt*(.17+(running?.12:0)));
-    addStat('sede',-dt*(.24+(running?.1:0)+dryHeat));
+    const dryHeat=biome[Math.floor(P.y/T)*W+Math.floor(P.x/T)]===2&&rainI<.2?.03:0;
+    addStat('fome',-dt*(.075+(running?.05:0)));
+    addStat('sede',-dt*(.1+(running?.05:0)+dryHeat));
     const wm=inv.roupa_couro>0?.6:1;if(wadeD>0)addStat('molhado',dt*(20+wadeD*40)*wm);else if(rainI>.15&&!sheltered)addStat('molhado',dt*rainI*14*wm);else addStat('molhado',-dt*(nearFire?28:sheltered?7:4));
     let reg=running?-7:P.moving?1.5:4;
     if(reg>0){if(ST.fome<20||ST.sede<20)reg*=.35;if(ST.doente>0)reg*=.4;if(ST.molhado>60)reg=-.6;if(DARK>.5&&!sheltered&&!nearFire&&!torchLit&&!(inv.roupa_couro>0))reg*=.6;if(sheltered||nearFire)reg*=1.8}
     addStat('energia',dt*reg);
-    if(ST.veneno>0){ST.veneno=Math.max(0,ST.veneno-dt);addStat('vida',-dt*.32);addStat('energia',-dt*.2)}
-    if(ST.febre>0){ST.febre=Math.max(0,ST.febre-dt*.5);addStat('energia',-dt*.22);addStat('sede',-dt*.14);if(ST.vida>25)addStat('vida',-dt*.06)}
-    if(ST.doente>0){ST.doente=Math.max(0,ST.doente-dt);addStat('fome',-dt*.09);addStat('sede',-dt*.12);if(ST.vida>15)addStat('vida',-dt*.12)}
-    if(ST.fome<=0)addStat('vida',-dt*.8);
-    if(ST.sede<=0)addStat('vida',-dt*1.2);
+    if(ST.veneno>0){ST.veneno=Math.max(0,ST.veneno-dt);addStat('vida',-dt*.2);addStat('energia',-dt*.2)}
+    if(ST.febre>0){ST.febre=Math.max(0,ST.febre-dt*.5);addStat('energia',-dt*.22);addStat('sede',-dt*.08);if(ST.vida>25)addStat('vida',-dt*.04)}
+    if(ST.doente>0){ST.doente=Math.max(0,ST.doente-dt);addStat('fome',-dt*.05);addStat('sede',-dt*.06);if(ST.vida>15)addStat('vida',-dt*.07)}
+    if(ST.fome<=0)addStat('vida',-dt*.45);
+    if(ST.sede<=0)addStat('vida',-dt*.65);
     if(ST.molhado>85&&WXP[wxId].bolt&&!nearFire)addStat('vida',-dt*.25);
     if(hailI>.3&&!sheltered){stats.hail=1;addStat('vida',-dt*.35*hailI*(inv.roupa_couro>0?.5:1));if(Math.random()<dt*2)hurtFlash=Math.max(hurtFlash,.25)}
-    if(season()===1&&DARK<.3&&!sheltered&&rainI<.1)addStat('sede',-dt*.05);
-    if(ST.fome>60&&ST.sede>60&&ST.molhado<60&&!ST.doente&&!ST.veneno&&!ST.febre)addStat('vida',dt*(nearFire||sheltered?.6:.25));
+    if(season()===1&&DARK<.3&&!sheltered&&rainI<.1)addStat('sede',-dt*.02);
+    if(ST.fome>50&&ST.sede>50&&ST.molhado<60&&!ST.doente&&!ST.veneno&&!ST.febre)addStat('vida',dt*(nearFire||sheltered?.8:.4));
     const warn=(k,cond,txt)=>{if(cond&&!warned[k]){warned[k]=1;floats.push({x:P.x,y:P.y-80,text:txt,life:2.2});play('hurt')}else if(!cond)warned[k]=0};
     warn('fome',ST.fome<25,'Com fome');warn('sede',ST.sede<25,'Com sede');warn('energia',ST.energia<15,'Cansado');warn('molhado',ST.molhado>75,'Encharcado');
     if(ST.vida<=0){fainted=true;act.hold=false;document.getElementById('faintWhy').textContent=ST.sede<=0?'A sede foi demais.':ST.fome<=0?'A fome foi demais.':lastHurt==='onca'&&hurtFlash>0?'Uma onça te atacou.':(lastHurt==='jacare'||lastHurt==='sucuri'||lastHurt==='tamandua')&&hurtFlash>0?`${SPEC[lastHurt].name} te pegou.`:lastHurt==='queixada'&&hurtFlash>0?'O bando de queixadas te derrubou.':ST.veneno>0?'O veneno da cobra te derrubou.':ST.febre>0?'A febre te derrubou.':lastHurt==='fogo'&&hurtFlash>0?'O fogo te pegou.':ST.doente>0?'A doença te derrubou.':'O frio da tempestade venceu.';faintEl.hidden=false;bmode&&setBuild(null)}
@@ -2666,7 +2680,8 @@ function update(dt){
     prey=null;farmI=-1;ACT=null;const boatK=P.boat?-1:nearBoat(115),npcK=nearNPC(84),tameK=findTame(64),feedK=eq&&!FOOD[eq]?findFeed(eq,85):eq?findFeed(eq,85):null;
     const hitAct=(t,e)=>{if(t.type==='muda')return{v:'Muda',s:`${TYPES[t.grow].name.toLowerCase()} · ${Math.floor((t.g||0)*100)}%`,ok:false};const fam=TYPES[t.type].tool,tl=e&&TOOLS[e]&&TOOLS[e].fam===fam?e:null;return{v:TYPES[t.type].verb,s:tl?'com '+TOOLS[tl].short:'à mão',go:()=>{dispatch({t:'hit',i:t.i,tool:tl});act.swing=1;if(ST.energia<4)act.cd*=1.6}}};
     const meleeAct=k=>({v:'Golpear',s:eq==='lanca'?'lança':'à mão',go:()=>{dispatch({t:'melee',a:k});act.swing=1;act.tool=eq==='lanca'?'lanca':null;act.cd=.5}});
-    const farm=(k,v,sb,tl)=>{if(canPlace(pieceByK(k),ft)){farmI=ft;ACT={v,s:sb,go:()=>{dispatch({t:'build',k,i:ft});act.swing=1;act.tool=tl||null;act.cd=.4}}}};
+    const fti=fpick.i>=0&&(mouseIn&&!coarse?time-fpick.t<3:time-fpick.t<6)&&farmPiece(eq)&&farmOk(farmPiece(eq),fpick.i)?fpick.i:ft;
+    const farm=(k,v,sb,tl)=>{if(canPlace(pieceByK(k),fti)){farmI=fti;ACT={v,s:sb,go:()=>{dispatch({t:'build',k,i:fti});act.swing=1;act.tool=tl||null;act.cd=.4}}}};
     if(P.boat&&eq!=='vara'){const ls=landSpot();ACT=ls?{v:'Desembarcar',s:'pisar na margem',go:()=>{dispatch({t:'boatOff',x:ls[0],y:ls[1]});act.cd=.6}}:{v:'Remando',s:'chegue perto da margem',ok:false}}
     else if(!P.boat&&boatK>=0&&eq!=='canoa'){const k=boatK;ACT={v:'Embarcar',s:'canoa',go:()=>{dispatch({t:'boatOn',b:k});act.cd=.6}}}
     else if(foe!=null){prey=foe;ACT=meleeAct(foe)}
@@ -2687,7 +2702,7 @@ function update(dt){
       else if(eq==='vara'){if(fishing)ACT={v:'Pescando',s:fishing.hk>=0?'fisgou!':'espere parado',ok:false};else{const ws=waterSpot();if(ws)ACT={v:'Pescar',s:'vara de pesca',go:()=>{dispatch({t:'cast',x:ws[0],y:ws[1]});act.cd=.8}}}}
       else if((eq==='agua_rio'||eq==='agua_limpa')&&fireNear(90)>=0){const fi=fireNear(90),id=eq;ACT={v:'Apagar fogo',s:'jogar a água',go:()=>{dispatch({t:'douse',i:fi,id});act.swing=1;act.cd=.5}}}
       else if(feedK!=null){const a=animals[feedK],k=feedK,id=eq;ACT={v:'Oferecer',s:`${ITEMS[id].toLowerCase()} · ${a.trust||0}/${TRUSTN[a.sp]}`,go:()=>{dispatch({t:'offer',a:k,id});act.cd=.6}}}
-      else if(SAPL[eq]){if(canSow(ft)){farmI=ft;const id=eq;ACT={v:'Plantar muda',s:ITEMS[id].toLowerCase(),go:()=>{dispatch({t:'sow',id,i:ft});act.cd=.5}}}}
+      else if(SAPL[eq]){if(farmOk('sow',fti)){farmI=fti;const id=eq;ACT={v:'Plantar muda',s:ITEMS[id].toLowerCase(),go:()=>{dispatch({t:'sow',id,i:fti});act.cd=.5}}}}
       else if(eq==='laco'){const k=findWild(95);if(k!=null)ACT={v:'Laçar',s:SPEC[animals[k].sp].name.toLowerCase(),go:()=>{dispatch({t:'lasso',a:k});act.swing=1;act.cd=.9}}}
       else if(eq==='galinha_viva'||eq==='cabra_viva'){const id=eq;ACT={v:'Soltar',s:'aqui, para criar',go:()=>{dispatch({t:'release',id});act.cd=.7}}}
       else if(FOOD[eq]){const id=eq;ACT={v:id==='emplastro'?'Aplicar':RETURNS[id]||id==='polpa'?'Beber':'Comer',s:foodText(id),go:()=>{dispatch({t:'eat',id});act.cd=.6}}}
@@ -2818,7 +2833,11 @@ function render(){
   ctx.fillStyle=`rgba(12,26,12,${.26*(1-rainI*.6)})`;
   for(const o of vis){const sh=SP[o.type][o.v].sh;ctx.beginPath();ctx.ellipse(o.x+sh.ox,o.y+sh.oy,sh.rx,sh.ry,0,0,TAU);ctx.fill()}
   if(!wadeD){ctx.fillStyle='rgba(12,26,12,.32)';ctx.beginPath();ctx.ellipse(P.x,P.y+1,13,5,0,0,TAU);ctx.fill()}
-  if(farmI>=0){const X=(farmI%W)*T,Y=((farmI/W)|0)*T;ctx.strokeStyle='rgba(166,209,106,.85)';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);ctx.strokeRect(X+2,Y+2,T-4,T-4);ctx.setLineDash([])}
+  {const fp=!bmode&&!fainted&&farmPiece(equipped());if(fp){const hov=fpick.i>=0&&(mouseIn&&!coarse?time-fpick.t<3:time-fpick.t<2.5)?fpick.i:farmI;
+    if(hov>=0){const ok=farmOk(fp,hov),X=(hov%W)*T,Y=((hov/W)|0)*T;ctx.fillStyle=ok?'rgba(166,209,106,.22)':'rgba(224,96,74,.2)';ctx.fillRect(X+2,Y+2,T-4,T-4);ctx.strokeStyle=ok?'rgba(166,209,106,.95)':'rgba(224,96,74,.9)';ctx.lineWidth=2;ctx.setLineDash(ok?[]:[6,4]);ctx.strokeRect(X+2,Y+2,T-4,T-4);ctx.setLineDash([]);
+      const im=iconImg(equipped());if(im&&im.complete){ctx.globalAlpha=ok?.85:.45;ctx.drawImage(im,X+12,Y+8,24,24);ctx.globalAlpha=1}}
+    else if(farmI>=0){}}
+  else if(farmI>=0){const X=(farmI%W)*T,Y=((farmI/W)|0)*T;ctx.strokeStyle='rgba(166,209,106,.85)';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);ctx.strokeRect(X+2,Y+2,T-4,T-4);ctx.setLineDash([])}}
   if(target){ctx.strokeStyle='rgba(242,194,48,.55)';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();const sh=SP[target.type][target.v].sh;ctx.ellipse(target.x,target.y+1,Math.min(26,sh.rx*.7)+3,Math.min(10,sh.ry)+3,0,0,TAU);ctx.stroke();ctx.setLineDash([])}
   const avis=animals.filter(a=>!a.dead&&a.x>L-60&&a.x<Rr+60&&a.y>Tp-40&&a.y<B+60);
   const isFly=a=>{const k=SPEC[a.sp].kind;return(k==='bird'||k==='tree')&&(a.z||0)>6},birds=avis.filter(isFly);
@@ -3137,7 +3156,7 @@ const GUIDE=[
   b:()=>`<p>Molhado e no frio você perde vida. Fique sob um telhado ou perto do fogo para secar.</p><p>A cada 5 dias muda a estação: nas <b>águas</b> chove mais e há tempestades; na <b>seca</b> faz sol, venta e o cerrado pega fogo fácil.</p>`,
   trig:()=>rainI>.3||ST.molhado>40},
  {id:'roca',cat:'Comida',icon:'enxada',t:'Plantar uma roça',
-  b:()=>`<ol style="padding-left:18px;margin:0 0 6px"><li>Pegue sementes ou ramas no milho crioulo, mandioca ou abóbora silvestres.</li><li>Crie a <b>enxada</b>, segure e are a terra.</li><li>Segure a semente e plante na terra arada.</li><li>Chuva, rio por perto ou cano mantêm molhado. <b>Adubo</b> e farinha de osso aceleram.</li></ol>`,
+  b:()=>`<ol style="padding-left:18px;margin:0 0 6px"><li>Pegue sementes ou ramas no milho crioulo, mandioca ou abóbora silvestres.</li><li>Crie a <b>enxada</b> e segure. ${K('Clique no chão (pode arrastar para arar vários)','Toque no chão')} perto de você para arar. O quadrado verde mostra onde dá; vermelho, onde não dá.</li><li>Segure a semente e ${K('clique','toque')} na terra arada. Adubo e mudas funcionam do mesmo jeito.</li><li>Chuva, rio por perto ou cano mantêm molhado. <b>Adubo</b> e farinha de osso aceleram.</li></ol>`,
   trig:()=>disc.has('o_milhoW')||disc.has('o_mandiocaW')||disc.has('o_aboboraW')},
  {id:'caca',cat:'Comida',icon:'arco',t:'Caçar',
   b:()=>`<p>Com o <b>arco</b> na mão, mire de longe (flechas de osso). A <b>lança</b> bate forte de perto.</p><p>Bichos ameaçados, como mico-leão, lobo-guará e boto, são <b>só para observar</b>: não dá para caçar.</p>`,
