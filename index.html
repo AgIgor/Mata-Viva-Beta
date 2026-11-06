@@ -2147,7 +2147,7 @@ function ambient(dt){if(!soundOn||!AC||fainted)return;const ac=AC,pi=Math.floor(
 const MPCOL=[['#5f6e3b','#9fbf5e','#434f29'],['#3b5f8a','#6fa0dc','#2a4566'],['#8a3b3b','#e07a6a','#662a2a'],['#7a5aa0','#b896e0','#5a3e7a'],['#3b8a7a','#6fd4be','#2a6658'],['#a0782a','#f2c230','#7a5a18']];
 const REPL=new Set(['hit','build','unbuild','fu','ma','reap','plot','lever','release','collect','feed','sow','douse','dig','ch']);
 const DIR4=['down','up','left','right'],MPCH=1900;
-const mp={on:false,host:false,room:null,src:'',code:'',ready:false,seq:0,out:[],seen:new Map(),snap:null,sentIds:new Set(),parts:{},hostPeer:null,t:0,ct:0,myC:0,prevSeed:null,unsub:null,lastRx:new Map()};
+const mp={uid:Math.random().toString(36).slice(2,10),joining:false,on:false,host:false,room:null,src:'',code:'',ready:false,seq:0,out:[],seen:new Map(),snap:null,sentIds:new Set(),parts:{},hostPeer:null,t:0,ct:0,myC:0,prevSeed:null,unsub:null,lastRx:new Map()};
 const others=new Map(),mpEl=document.getElementById('mpPanel');
 function mpName(){let n='';try{n=localStorage.getItem('mataviva:nome')||''}catch(_){}return n||('Sobrevivente '+(Math.random()*90+10|0))}
 document.getElementById('mpName').value=mpName();
@@ -2180,10 +2180,12 @@ function peerRoomApi(){return{async join(name,host){const pm=new Map(),hs=new Se
         c.on('close',()=>{conns.delete(c.peer);drop(c.peer);for(const o of conns.values())if(o.open)o.send({t:'bye',peer:c.peer})})})});
     const send=()=>{if(host){for(const c of conns.values())if(c.open)c.send({t:'p',peer:me,presence:mine})}else if(toHost&&toHost.open)toHost.send({t:'p',presence:mine})};
     cur=Object.freeze([self()]);
+    const ev=setInterval(()=>{if(!alive){clearInterval(ev);return}const now=Date.now();for(const[id,pr]of pm)if(now-pr.updatedAt>15000){drop(id);const c=conns.get(id);if(c){conns.delete(id);try{c.close()}catch(_){}for(const o of conns.values())if(o.open)o.send({t:'bye',peer:id})}}},3000);
     return{name,peers:()=>cur,connected:()=>alive,
       presence:async patch=>{mine=Object.assign({},mine);for(const k in patch){if(patch[k]===null)delete mine[k];else mine[k]=patch[k]}if(!pend)pend=setTimeout(()=>{pend=null;send()},45)},
       onPeers:h=>{hs.add(h);setTimeout(()=>h({peers:cur,joined:cur,left:[],updated:[]}),0);return()=>hs.delete(h)},
       leave:async()=>{alive=false;hs.clear();try{peer.destroy()}catch(_){}}}}}}
+addEventListener('pagehide',()=>{if(mp.on&&mp.room)try{mp.room.leave()}catch(_){}});
 let roomApiP=null;
 function getRoomApi(){if(roomApiP)return roomApiP;roomApiP=(async()=>{try{if(window.claude&&typeof claude.use==='function'){const r=await claude.use('room');if(r)return{api:r,src:'claude'}}}catch(_){}
   if(!(window.claude&&claude.use)&&location.protocol.startsWith('http')&&await loadPeerJS())return{api:peerRoomApi(),src:'peer'};
@@ -2194,12 +2196,15 @@ function mpUI(){const live=mp.on;document.getElementById('mpSetup').hidden=live;
   document.getElementById('mpStatus').textContent=!live?'':mp.host?(others.size?'Seu mundo está aberto para a sala.':'Passe o código para quem vai entrar.'):mp.ready?'Você está no mundo do anfitrião.':mp.hostPeer?`Recebendo o mundo… ${Object.keys(mp.parts[mp.wantId]||{}).length}/${mp.wantN||'?'}`:'Esperando o anfitrião na sala…';
   const li=[`<li><i style="background:${MPCOL[mp.myC][1]}"></i>${esc(document.getElementById('mpName').value||'Você')} <small>você${mp.host?' · anfitrião':''}</small></li>`];for(const o of others.values())li.push(`<li><i style="background:${MPCOL[o.c%6][1]}"></i>${esc(o.n)} <small>${o.h?'anfitrião':''}</small></li>`);document.getElementById('mpList').innerHTML=li.join('')}
 const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-async function mpStart(host,code){const r=await getRoomApi();if(!r){document.getElementById('mpMode').textContent='Sala indisponível neste navegador';return}
+async function mpStart(host,code){if(mp.on||mp.joining)return;mp.joining=true;mpBtns(true);try{await mpStart2(host,code)}finally{mp.joining=false;mpBtns(false)}}
+function mpBtns(b){for(const id of['mpHost','mpJoin']){const e=document.getElementById(id);e.disabled=b;e.style.opacity=b?.5:''}if(b)document.getElementById('mpMode').textContent='Conectando…'}
+async function mpStart2(host,code){const r=await getRoomApi();if(!r){document.getElementById('mpMode').textContent='Sala indisponível neste navegador';return}
   code=(code||'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,8);if(!code)code=Math.random().toString(36).slice(2,7);
   let room;try{room=await r.api.join('mv-'+code,host)}catch(e){const c=e&&e.code;document.getElementById('mpMode').textContent=c==='sala_nao_encontrada'?'Sala não encontrada: confira o código e se o anfitrião está online':c==='sala_em_uso'?'Esse código já está em uso: crie outra sala':'Não deu para conectar ('+(c||'erro')+')';return}
   const nm=(document.getElementById('mpName').value||'').trim().slice(0,14)||mpName();try{localStorage.setItem('mataviva:nome',nm)}catch(_){}
   Object.assign(mp,{on:true,cFixed:false,host,room,src:r.src,code,ready:host,seq:0,out:[],snap:null,parts:{},hostPeer:null,wantId:null,myC:1+((Math.random()*5)|0)});mp.seen.clear();mp.sentIds.clear();others.clear();
-  room.presence({n:nm,c:mp.myC,h:host?1:0,r:null,w:null});
+  room.presence({n:nm,c:mp.myC,h:host?1:0,r:null,w:null,u:mp.uid});
+  document.getElementById('mpMode').textContent=r.src==='claude'?'Online pela sala ao vivo do Claude':r.src==='peer'?'Online direto entre navegadores (PeerJS)':'Teste local: abas deste navegador';
   mp.unsub=room.onPeers(ch=>mpPeers(ch));mpUI();toast('Multiplayer',host?'Sala criada':'Entrando na sala','Código '+code.toUpperCase(),ICON.p_bed)}
 async function mpLeave(){if(!mp.on)return;try{mp.unsub&&mp.unsub();await mp.room.leave()}catch(_){}mp.on=false;mp.room=null;others.clear();const wasGuest=MPG;MPG=false;mpUI();if(wasGuest){save();generate(mp.prevSeed||seedStr);mp.prevSeed=null}}
 function dispatch(cmd){if(mp.on&&mp.ready&&REPL.has(cmd.t)){mp.seq++;mp.out.push([mp.seq,cmd,P.x|0,P.y|0]);if(mp.out.length>22)mp.out.shift()}applyCmd(cmd)}
@@ -2211,8 +2216,9 @@ function mpPeers(ch){if(!mp.on)return;let changed=false;
   if(!mp.cFixed&&ch.peers.length>1){const used=new Set(ch.peers.filter(p=>!(p.isMe&&p.sameTab)).map(p=>((p.presence||{}).c|0)%6));if(used.has(mp.myC)){for(let k=1;k<6;k++)if(!used.has(k)){mp.myC=k;break}mp.room.presence({c:mp.myC})}mp.cFixed=true}
   for(const pr of ch.left){if(others.has(pr.peer)){const o=others.get(pr.peer);others.delete(pr.peer);toast('Multiplayer',`${o.n} saiu`,'',null);changed=true}if(pr.peer===mp.hostPeer)mp.hostPeer=null}
   for(const pr of ch.peers){if(pr.isMe&&pr.sameTab)continue;const q=pr.presence||{};if(!q.n)continue;let o=others.get(pr.peer);
+    if(q.u)for(const[k2,o2]of others)if(k2!==pr.peer&&o2.u===q.u){others.delete(k2);changed=true}
     if(!o){o={rp:1,peer:pr.peer,x:0,y:0,tx:0,ty:0,dir:'down',mv:0,phase:0,n:String(q.n).slice(0,14),c:(q.c|0)%6,eq:'',h:q.h?1:0,fresh:true};others.set(pr.peer,o);changed=true;if(mp.ready)toast('Multiplayer',`${o.n} entrou`,'',null)}
-    o.n=String(q.n).slice(0,14);o.c=(q.c|0)%6;o.h=q.h?1:0;
+    o.n=String(q.n).slice(0,14);o.c=(q.c|0)%6;o.h=q.h?1:0;o.u=q.u||'';if(o.hb!==q.hb||!o.seenAt){o.hb=q.hb;o.seenAt=Date.now()}
     if(Array.isArray(q.p)){o.tx=+q.p[0]||0;o.ty=+q.p[1]||0;o.dir=DIR4[q.p[2]|0]||'down';o.mv=q.p[3]?1:0;if(o.fresh){o.x=o.tx;o.y=o.ty;o.fresh=false}}o.eq=typeof q.e==='string'?q.e:'';
     if(q.h&&!mp.host){mp.hostPeer=pr.peer;
       if(!mp.ready&&q.w&&q.w.id){const w=q.w;if(mp.wantId!==w.id){mp.wantId=w.id;mp.wantN=w.n;mp.parts={[w.id]:{}}}const bag=mp.parts[w.id];if(typeof w.d==='string')bag[w.i]=w.d;
@@ -2236,7 +2242,8 @@ async function mpReceive(w,bag,q){let txt='';for(let i=0;i<w.n;i++)txt+=bag[i];l
 function mpTick(dt){if(!mp.on)return;
   for(const o of others.values()){const k=Math.min(1,dt*10);o.x+=(o.tx-o.x)*k;o.y+=(o.ty-o.y)*k;o.moving=o.mv;if(o.mv)o.phase+=dt*9}
   mp.t-=dt;if(mp.t>0)return;mp.t=.1;
-  const pat={p:[P.x|0,P.y|0,Math.max(0,DIR4.indexOf(P.dir)),P.moving?1:0],e:equipped()||'',v:ST.vida|0,q:mp.seq,o:mp.out};
+  {const now=Date.now();for(const[k,o]of others)if(now-o.seenAt>12000){others.delete(k);toast('Multiplayer',`${o.n} saiu`,'conexão perdida',null);mpUI()}}
+  const pat={p:[P.x|0,P.y|0,Math.max(0,DIR4.indexOf(P.dir)),P.moving?1:0],e:equipped()||'',v:ST.vida|0,q:mp.seq,o:mp.out,hb:(Date.now()/1000|0)%10000};
   if(mp.host){pat.s=seedStr;pat.k=[+dayT.toFixed(4),dayN,wxId];
     let need=false;for(const pr of mp.room.peers()){if(pr.isMe)continue;const q=pr.presence||{};if(q.n&&!q.h&&!mp.sentIds.has(q.r))need=true}
     if(need){if(!mp.snap&&!mp.packing){mp.packing=true;packSnap().then(sn=>{mp.snap=sn;mp.packing=false})}
