@@ -383,7 +383,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(-
       <p>Tudo fica salvo neste navegador, sozinho, a cada poucos segundos.</p>
       <button class="btn" type="button" data-tback>Voltar</button>
     </div>
-    <p class="ttl-ver">Versão 1.21 · teste</p>
+    <p class="ttl-ver">Versão 1.22 · teste</p>
   </div>
 </div>
 <div id="pause" hidden role="dialog" aria-label="Pausa">
@@ -531,9 +531,9 @@ function ell(x,cx,cy,rx,ry){x.beginPath();x.ellipse(cx,cy,rx,ry,0,0,TAU)}
 function R2(x,X,Y,w,h,r,c){x.fillStyle=c;x.beginPath();x.roundRect(X,Y,w,h,r);x.fill()}
 function C2(x,X,Y,r,c){x.fillStyle=c;x.beginPath();x.arc(X,Y,r,0,TAU);x.fill()}
 function E2(x,X,Y,rx,ry,c){x.fillStyle=c;x.beginPath();x.ellipse(X,Y,rx,ry,0,0,TAU);x.fill()}
-const PAL={ipeA:['#94600f','#cf951b','#f0bf2e','#ffe58a'],ipeR:['#55265f','#8a479f','#be78d2','#efc6f4'],jatoba:['#213f1d','#386629','#5a8f3d','#97c466'],pitanga:['#284a21','#427431','#679c46','#a5cf78']};
+const PAL={ipeA:['#94600f','#cf951b','#f0bf2e','#ffe58a'],ipeR:['#55265f','#8a479f','#be78d2','#efc6f4'],jatoba:['#213f1d','#386629','#5a8f3d','#97c466'],pitanga:['#284a21','#427431','#679c46','#a5cf78'],cacau:['#1b3319','#2a4f24','#437332','#7aa654']};
 PAL.mangue=['#1c3820','#2c5530','#457a42','#7fae68'];
-const DOTS={mangue:['#9cc77c','#183018'],ipeA:['#fff2a6','#a86c0c'],ipeR:['#f3d5f7','#4a1f55'],jatoba:['#a8d276','#1d3a19'],pitanga:['#9ccb6f','#203d1b']};
+const DOTS={mangue:['#9cc77c','#183018'],ipeA:['#fff2a6','#a86c0c'],ipeR:['#f3d5f7','#4a1f55'],jatoba:['#a8d276','#1d3a19'],pitanga:['#9ccb6f','#203d1b'],cacau:['#8fbf62','#16291a']};
 const BARK={ipe:['#6c5a49','#8d7864','#463a2f'],jatoba:['#6b4835','#8c644b','#3f2a1e'],buriti:['#7d7668','#a39b89','#57524a']};
 
 function drawTrunk(x,rng,h,w,bark){
@@ -725,6 +725,26 @@ function buildPitanga(rng){
   });
   return{body,fruit,top:-52,sh:{rx:26,ry:9,ox:8,oy:-1},sway:1};
 }
+function buildCacau(rng){
+  const body=mk(110,110,55,100,x=>{
+    const g=x.createLinearGradient(-4,0,4,0);g.addColorStop(0,'#4a3424');g.addColorStop(1,'#6e5038');x.strokeStyle=g;x.lineWidth=5;x.beginPath();x.moveTo(0,2);x.quadraticCurveTo(-2,-16,1,-30);x.stroke();
+    x.lineWidth=2.5;x.strokeStyle='#5a4130';for(const[a,b]of[[-12,-34],[12,-36],[-4,-40]]){x.beginPath();x.moveTo(0,-26);x.lineTo(a,b);x.stroke()}
+    drawCanopy(x,rng,PAL.cacau,0,-46,29,21,10,DOTS.cacau,null)});
+  const fruit=mk(110,110,55,100,x=>{const spots=[[-3,-9],[3,-15],[-3,-21],[3,-25],[-9,-30],[9,-31]];
+    for(const[bx,by]of spots){if(rng()<.2)continue;const c=['#e0a42a','#d2701e','#9a3e1a'][Math.floor(rng()*3)];x.save();x.translate(bx,by);x.rotate((bx<0?-1:1)*.25);E2(x,0,0,2.6,4.4,c);x.strokeStyle='rgba(60,20,5,.45)';x.lineWidth=.7;x.beginPath();x.moveTo(-1,-4);x.lineTo(-1,4);x.moveTo(1,-4);x.lineTo(1,4);x.stroke();E2(x,-.8,-1.5,.8,1.8,'rgba(255,230,160,.45)');x.restore()}});
+  return{body,fruit,top:-70,sh:{rx:26,ry:9,ox:8,oy:-1},sway:1};
+}
+function buildAcai(rng){const stems=[];const n=3+(rng()<.5?1:0);for(let k=0;k<n;k++)stems.push({bx:(k-(n-1)/2)*5+(rng()-.5)*2,h:70+rng()*34,lean:(k-(n-1)/2)*7+(rng()-.5)*6});
+  const body=mk(170,170,85,160,x=>{for(const st of stems){x.strokeStyle='#7d7262';x.lineWidth=2.8;x.beginPath();x.moveTo(st.bx,2);x.quadraticCurveTo(st.bx+st.lean*.3,-st.h*.5,st.bx+st.lean,-st.h);x.stroke();
+      x.strokeStyle='rgba(40,34,28,.35)';x.lineWidth=.8;for(let y=-8;y>-st.h+6;y-=7){const k=-y/st.h,lx=st.bx+st.lean*k*k;x.beginPath();x.moveTo(lx-1.6,y);x.lineTo(lx+1.6,y);x.stroke()}}
+    for(const st of stems){const cx=st.bx+st.lean,cy=-st.h;for(let i=0;i<7;i++){const a=-Math.PI/2+(i/6-.5)*3+(rng()-.5)*.2;const L=20+rng()*6,px=cx+Math.cos(a)*L,py=cy+Math.sin(a)*L*.55+L*.35;
+      x.strokeStyle='#4f7a34';x.lineWidth=1.4;x.beginPath();x.moveTo(cx,cy);x.quadraticCurveTo((cx+px)/2,cy-6,px,py);x.stroke();
+      for(let j=1;j<9;j++){const t=j/9,qx=cx+(px-cx)*t,qy=cy+(py-cy)*t-Math.sin(t*Math.PI)*6;x.strokeStyle=j%2?'#5f9440':'#3f6a2c';x.lineWidth=1.1;x.beginPath();x.moveTo(qx,qy);x.lineTo(qx+Math.cos(a+1.4)*1.5,qy+7);x.moveTo(qx,qy);x.lineTo(qx+Math.cos(a-1.4)*1.5,qy+7);x.stroke()}}
+      E2(x,cx,cy+3,2.2,4,'#6a8a3a')}});
+  const fruit=mk(170,170,85,160,x=>{for(const st of stems){const cx=st.bx+st.lean,cy=-st.h+7;x.strokeStyle='#8a5a2a';x.lineWidth=1;for(let k=0;k<5;k++){x.beginPath();x.moveTo(cx,cy);x.lineTo(cx-5+k*2.5,cy+9);x.stroke()}
+    for(let k=0;k<16;k++)C2(x,cx-6+rng()*12,cy+6+rng()*7,1.5,rng()<.5?'#3a1640':'#4e2058')}});
+  return{body,fruit,top:-110,sh:{rx:20,ry:8,ox:10,oy:-1},sway:1};
+}
 function buildHelic(rng){
   const body=mk(120,110,60,100,x=>{
     const lv=[];for(let i=0;i<7;i++)lv.push(-Math.PI/2+(i/6-.5)*2.1+(rng()-.5)*.25);
@@ -815,15 +835,15 @@ function buildStump(rng){
 }
 
 const ITEMS={balde:'Balde de cobre',balde_agua:'Balde com água',lanca:'Lança de pedra',roupa_couro:'Roupa de couro',enxada:'Enxada',machado_ferro:'Machado de ferro',picareta_ferro:'Picareta de ferro',machado_cobre:'Machado de cobre',picareta_cobre:'Picareta de cobre',machado:'Machado de pedra',picareta:'Picareta de pedra',tocha:'Tocha',madeira:'Madeira',corda:'Corda',fibra:'Fibra',folhas:'Folhas',pedra:'Pedra',ferro:'Minério de ferro',cobre:'Minério de cobre',barra_ferro:'Barra de ferro',barra_cobre:'Barra de cobre',tabua:'Tábua',cano:'Cano de madeira',pitanga:'Pitanga',buriti:'Buriti',jatoba:'Jatobá',polpa:'Polpa de mandacaru',buriti_assado:'Buriti assado',jatoba_assado:'Jatobá tostado',mandioca:'Mandioca',mandioca_assada:'Mandioca assada',milho:'Milho',milho_assado:'Milho assado',abobora:'Abóbora',abobora_assada:'Abóbora assada',rama_mandioca:'Rama de mandioca',semente_milho:'Sementes de milho',semente_abobora:'Sementes de abóbora',terra:'Terra',sobras:'Sobras de comida',adubo:'Adubo',carvao:'Carvão',cabaca:'Cabaça vazia',agua_rio:'Cabaça com água do rio',agua_limpa:'Cabaça com água limpa',panela:'Panela de cobre',ossos:'Ossos',farinha_osso:'Farinha de osso',arco:'Arco',flecha:'Flecha',carne_crua:'Carne crua',carne_assada:'Carne assada',couro:'Couro'};
-Object.assign(ITEMS,{vara:'Vara de pesca',laco:'Laço',peixe_cru:'Peixe cru',peixe_assado:'Peixe assado',mel:'Mel',cera:'Cera de abelha',ovo:'Ovo',ovo_cozido:'Ovo cozido',leite:'Leite',moeda:'Moeda de cobre',canoa:'Canoa',fio:'Fio de cobre',bobina:'Bobina',lampada:'Lâmpada',lanterna:'Lanterna de manivela',galinha_viva:'Galinha (viva)',cabra_viva:'Cabra (viva)',vaca_viva:'Vaca (viva)',porco_viva:'Porco (vivo)',queijo:'Queijo coalho',folhas_guaco:'Folhas de guaco',folhas_boldo:'Folhas de boldo',casca_quina:'Casca de quina',cha_boldo:'Chá de boldo',cha_quina:'Chá de quina',emplastro:'Emplastro de guaco',semente_ipe:'Semente de ipê',semente_jatoba:'Semente de jatobá',semente_pitanga:'Caroço de pitanga',semente_buriti:'Coquinho de buriti'});
+Object.assign(ITEMS,{vara:'Vara de pesca',laco:'Laço',peixe_cru:'Peixe cru',peixe_assado:'Peixe assado',mel:'Mel',cera:'Cera de abelha',ovo:'Ovo',ovo_cozido:'Ovo cozido',leite:'Leite',moeda:'Moeda de cobre',canoa:'Canoa',fio:'Fio de cobre',bobina:'Bobina',lampada:'Lâmpada',lanterna:'Lanterna de manivela',galinha_viva:'Galinha (viva)',cabra_viva:'Cabra (viva)',vaca_viva:'Vaca (viva)',porco_viva:'Porco (vivo)',queijo:'Queijo coalho',cacau:'Cacau',acai:'Açaí',semente_cacau:'Semente de cacau',semente_acai:'Caroço de açaí',chocolate:'Chocolate caseiro',tigela_acai:'Tigela de açaí',folhas_guaco:'Folhas de guaco',folhas_boldo:'Folhas de boldo',casca_quina:'Casca de quina',cha_boldo:'Chá de boldo',cha_quina:'Chá de quina',emplastro:'Emplastro de guaco',semente_ipe:'Semente de ipê',semente_jatoba:'Semente de jatobá',semente_pitanga:'Caroço de pitanga',semente_buriti:'Coquinho de buriti'});
 const ITEM_ORDER=Object.keys(ITEMS);
 const FOOD={agua_limpa:{sede:30},agua_rio:{sede:30},carne_crua:{fome:8},carne_assada:{fome:45,energia:10},milho:{fome:10},milho_assado:{fome:30,energia:6},abobora:{fome:16,sede:6},abobora_assada:{fome:42,energia:10},mandioca:{fome:12},mandioca_assada:{fome:40,energia:8},pitanga:{fome:10,sede:4},buriti:{fome:16},jatoba:{fome:20},polpa:{sede:28,fome:3},buriti_assado:{fome:38,energia:10},jatoba_assado:{fome:45,energia:12}};
 const SOURCES={balde:'Crie na bancada com cobre e corda',balde_agua:'Encha o balde num rio, lago ou coletor',carvao:'Faça na carvoaria: 3 madeiras viram 2 carvões',lanca:'Crie com madeira, pedra e corda',roupa_couro:'Crie na bancada com couro',cabaca:'Crie com 1 abóbora e 1 fibra',agua_rio:'Encha a cabaça num rio ou lago (pela mochila)',agua_limpa:'Encha a cabaça no coletor de chuva ou ferva água do rio na panela',panela:'Crie na bancada com barras de cobre',ossos:'Recolha ossadas espalhadas pelo mapa ou de animais caçados',farinha_osso:'Crie na bancada moendo ossos',arco:'Crie com madeira e corda',flecha:'Crie com madeira, ossos e fibra',carne_crua:'Cace capivaras com arco e flecha',carne_assada:'Asse carne perto de uma fogueira acesa',couro:'Vem dos animais caçados',enxada:'Crie na tela Criar: madeira, pedra e corda',milho:'Colha milho crioulo ou plante',milho_assado:'Asse milho perto de uma fogueira acesa',abobora:'Colha abóbora silvestre ou plante',abobora_assada:'Asse abóbora perto de uma fogueira acesa',rama_mandioca:'Colha mandioca silvestre ou da sua plantação',semente_milho:'Colha milho crioulo no campo',semente_abobora:'Colha abóbora silvestre perto da água',terra:'Sai ao arar a terra com a enxada',sobras:'Sobram de vez em quando ao comer',adubo:'Faça na composteira: folhas, terra e sobras',machado_cobre:'Crie na bancada com barras de cobre',picareta_cobre:'Crie na bancada com barras de cobre',tabua:'Serraria: cada madeira vira 2 tábuas',cano:'Crie na bancada com 1 tábua',mandioca:'Colha no canteiro de mandioca',mandioca_assada:'Asse mandioca perto de uma fogueira acesa',machado_ferro:'Crie na bancada com barras de ferro',picareta_ferro:'Crie na bancada com barras de ferro',tocha:'Crie com 1 madeira e 1 fibra',barra_ferro:'Derreta minério de ferro na fornalha com um fole funcionando ao lado',barra_cobre:'Derreta minério de cobre na fornalha',fio_cobre:'Crie na bancada com barra de cobre',madeira:'Corte ipês, jatobás ou tocos',corda:'Crie na tela Criar com 3 fibras',fibra:'Colha helicônias ou corte buritis',folhas:'Colha samambaias, comuns na mata',pedra:'Quebre rochas ou minérios',ferro:'Minere veios avermelhados no cerrado e no lajedo',cobre:'Minere veios verde-água no cerrado e no lajedo',pitanga:'Colha pitangueiras',buriti:'Corte buritis, que crescem perto da água',jatoba:'Corte jatobás na mata úmida',polpa:'Corte mandacarus no cerrado seco',machado:'Crie na tela Criar',picareta:'Crie na tela Criar',buriti_assado:'Asse buriti perto de uma fogueira acesa',jatoba_assado:'Toste jatobá perto de uma fogueira acesa'};
 const COOK=[{out:'carne_assada',need:[['carne_crua',1]]},{out:'agua_limpa',need:[['agua_rio',1]],tool:'panela',verb:'Ferver'},{out:'milho_assado',need:[['milho',1]]},{out:'abobora_assada',need:[['abobora',1]]},{out:'mandioca_assada',need:[['mandioca',1]]},{out:'buriti_assado',need:[['buriti',1]]},{out:'jatoba_assado',need:[['jatoba',1]]}];
-Object.assign(FOOD,{peixe_cru:{fome:6},peixe_assado:{fome:34,energia:6},mel:{fome:12,energia:15},ovo:{fome:5},ovo_cozido:{fome:22,energia:6},leite:{fome:8,sede:18},queijo:{fome:30,energia:8},cha_boldo:{sede:15},cha_quina:{sede:15},emplastro:{vida:5}});
+Object.assign(FOOD,{peixe_cru:{fome:6},peixe_assado:{fome:34,energia:6},mel:{fome:12,energia:15},ovo:{fome:5},ovo_cozido:{fome:22,energia:6},leite:{fome:8,sede:18},queijo:{fome:30,energia:8},cacau:{fome:7,sede:6},acai:{fome:6,energia:8},chocolate:{fome:16,energia:24},tigela_acai:{fome:30,energia:16,sede:8},cha_boldo:{sede:15},cha_quina:{sede:15},emplastro:{vida:5}});
 const CURE={cha_boldo:'doente',cha_quina:'febre',emplastro:'veneno'},CURE_N={doente:'mal-estar',febre:'febre',veneno:'veneno'};
-COOK.push({out:'peixe_assado',need:[['peixe_cru',1]]},{out:'ovo_cozido',need:[['ovo',1]]},{out:'queijo',need:[['leite',3]],verb:'Fazer queijo'},{out:'cha_boldo',need:[['folhas_boldo',2],['agua_limpa',1]],verb:'Fazer chá'},{out:'cha_quina',need:[['casca_quina',2],['agua_limpa',1]],verb:'Fazer chá'});
-Object.assign(SOURCES,{vara:'Crie com madeira, corda e ossos',laco:'Crie com 3 cordas',peixe_cru:'Pesque com a vara num rio ou lago, ou deixe um covo na margem',peixe_assado:'Asse peixe cru na fogueira',mel:'Colmeia silvestre nas árvores (use a tocha) ou caixa de abelhas',cera:'Vem junto com o mel',ovo:'Galinhas de criação',ovo_cozido:'Cozinhe o ovo na fogueira',leite:'Ordenhe cabras de criação',galinha_viva:'Lace uma galinha caipira no campo',cabra_viva:'Lace uma cabra no cerrado ou na serra',vaca_viva:'Lace uma vaca curraleira no campo',porco_viva:'Lace um porco caipira no campo ou na mata',queijo:'Asse na fogueira com 3 leites',moeda:'Venda coisas para os moradores da vila',canoa:'Crie com madeira e corda',fio:'Crie com barra de cobre (era do vapor)',bobina:'Crie com fio de cobre e barra de ferro · abre a era elétrica',lampada:'Crie com fio, ferro e cera',lanterna:'Crie com lâmpada, ferro e fio',folhas_guaco:'Guaco: trepadeira de folhas em coração, na mata e no mangue',folhas_boldo:'Boldo: arbusto de folhas aveludadas no campo',casca_quina:'Quina: arvoreta de flores rosadas na mata e na serra',cha_boldo:'Ferva na fogueira com água limpa · cura o mal-estar',cha_quina:'Ferva na fogueira com água limpa · cura a febre',emplastro:'Crie com folhas de guaco · cura o veneno de cobra',semente_ipe:'Aves deixam cair; às vezes sai ao cortar um ipê',semente_jatoba:'Araras deixam cair; às vezes sai ao cortar um jatobá',semente_pitanga:'Tucanos deixam cair; às vezes sai ao colher pitanga',semente_buriti:'Araras deixam cair; às vezes sai ao cortar um buriti'});
+COOK.push({out:'peixe_assado',need:[['peixe_cru',1]]},{out:'ovo_cozido',need:[['ovo',1]]},{out:'queijo',need:[['leite',3]],verb:'Fazer queijo'},{out:'chocolate',need:[['cacau',2],['mel',1]],verb:'Fazer chocolate'},{out:'cha_boldo',need:[['folhas_boldo',2],['agua_limpa',1]],verb:'Fazer chá'},{out:'cha_quina',need:[['casca_quina',2],['agua_limpa',1]],verb:'Fazer chá'});
+Object.assign(SOURCES,{vara:'Crie com madeira, corda e ossos',laco:'Crie com 3 cordas',peixe_cru:'Pesque com a vara num rio ou lago, ou deixe um covo na margem',peixe_assado:'Asse peixe cru na fogueira',mel:'Colmeia silvestre nas árvores (use a tocha) ou caixa de abelhas',cera:'Vem junto com o mel',ovo:'Galinhas de criação',ovo_cozido:'Cozinhe o ovo na fogueira',leite:'Ordenhe cabras de criação',galinha_viva:'Lace uma galinha caipira no campo',cabra_viva:'Lace uma cabra no cerrado ou na serra',vaca_viva:'Lace uma vaca curraleira no campo',porco_viva:'Lace um porco caipira no campo ou na mata',queijo:'Asse na fogueira com 3 leites',cacau:'Colha no cacaueiro, na sombra da mata',acai:'Colha no açaizeiro, na beira dos rios e do mangue',semente_cacau:'Às vezes sai ao colher cacau; os papagaios também derrubam',semente_acai:'Às vezes sai ao colher açaí; os tucanos também derrubam',chocolate:'Faça na fogueira com 2 cacaus e 1 mel',tigela_acai:'Crie com 3 açaís e 1 mel',moeda:'Venda coisas para os moradores da vila',canoa:'Crie com madeira e corda',fio:'Crie com barra de cobre (era do vapor)',bobina:'Crie com fio de cobre e barra de ferro · abre a era elétrica',lampada:'Crie com fio, ferro e cera',lanterna:'Crie com lâmpada, ferro e fio',folhas_guaco:'Guaco: trepadeira de folhas em coração, na mata e no mangue',folhas_boldo:'Boldo: arbusto de folhas aveludadas no campo',casca_quina:'Quina: arvoreta de flores rosadas na mata e na serra',cha_boldo:'Ferva na fogueira com água limpa · cura o mal-estar',cha_quina:'Ferva na fogueira com água limpa · cura a febre',emplastro:'Crie com folhas de guaco · cura o veneno de cobra',semente_ipe:'Aves deixam cair; às vezes sai ao cortar um ipê',semente_jatoba:'Araras deixam cair; às vezes sai ao cortar um jatobá',semente_pitanga:'Tucanos deixam cair; às vezes sai ao colher pitanga',semente_buriti:'Araras deixam cair; às vezes sai ao cortar um buriti'});
 const RISK={agua_rio:.3,carne_crua:.4,peixe_cru:.35,ovo:.2},RETURNS={agua_rio:'cabaca',agua_limpa:'cabaca'};
 function foodText(id){const f=FOOD[id];return Object.entries(f).map(([k,v])=>`+${v} ${k}`).join(' · ')+(typeof CURE!=='undefined'&&CURE[id]?` · cura ${CURE_N[CURE[id]]}`:'')}
 const TYPES={
@@ -832,7 +852,9 @@ const TYPES={
   jatoba:{name:'Jatobá',tag:'Madeira · fruto',col:11,big:1,tree:1,hp:6,verb:'Cortar',drops:[['madeira',4],['jatoba',1]],fx:['#8c644b','#5a8f3d'],snd:'wood',fy:26},
   buriti:{name:'Buriti',tag:'Fibra · fruto',col:7,big:1,tree:1,hp:5,verb:'Cortar',drops:[['fibra',3],['buriti',2]],fx:['#a39b89','#86bf5c'],snd:'wood',fy:30},
   mandacaru:{name:'Mandacaru',tag:'Água · fruto',col:9,big:1,hp:3,verb:'Cortar',drops:[['polpa',2]],fx:['#86b862','#ece5c6'],snd:'plant',fy:30},
-  pitanga:{name:'Pitangueira',tag:'Alimento',col:0,slow:.55,hp:1,verb:'Colher',drops:[['pitanga',3]],fx:['#679c46','#c92f24'],snd:'plant',fy:22},
+  pitanga:{name:'Pitangueira',tag:'Alimento',col:0,slow:.55,hp:1,verb:'Colher',drops:[['pitanga',3]],fx:['#679c46','#c92f24'],snd:'plant',fy:22,pick:90},
+  cacau:{name:'Cacaueiro',tag:'Fruto · chocolate',col:6,hp:1,verb:'Colher',drops:[['cacau',2]],fx:['#437332','#d2701e'],snd:'plant',fy:30,pick:150},
+  acai:{name:'Açaizeiro',tag:'Fruto · energia',col:5,hp:1,verb:'Colher',drops:[['acai',3]],fx:['#5f9440','#4e2058'],snd:'plant',fy:60,pick:140},
   helic:{name:'Helicônia',tag:'Fibra',col:0,slow:.65,hp:1,verb:'Colher',drops:[['fibra',2]],fx:['#4f8a36','#d6352a'],snd:'plant',fy:20},
   fern:{name:'Samambaia',tag:'Forragem',col:0,slow:.78,hp:1,verb:'Colher',drops:[['folhas',2]],fx:['#6aa84a','#4f8e38'],snd:'plant',fy:10},
   rock:{name:'Rocha',tag:'Pedra',col:15,hp:3,verb:'Quebrar',drops:[['pedra',3]],fx:['#9a968a','#5c5951'],snd:'stone',fy:12},
@@ -871,6 +893,7 @@ const RECIPES=[
   {out:'machado',n:1,era:'pedra',need:[['madeira',2],['pedra',2],['corda',1]],desc:'Corta árvores, buriti, mandacaru e tocos com o dobro de força. Dura 40 golpes.'},
   {out:'picareta',n:1,era:'pedra',need:[['madeira',2],['pedra',3],['corda',1]],desc:'Quebra rochas e minérios com o dobro de força. Dura 40 golpes.'},
   {out:'enxada',n:1,era:'pedra',need:[['madeira',2],['pedra',1],['corda',1]],desc:'Equipe na barra de itens e use o botão de ação para arar o chão à sua frente. Dura 60 usos.'},
+  {out:'tigela_acai',n:1,era:'pedra',need:[['acai',3],['mel',1]],desc:'Açaí batido com mel. Mata a fome e dá bastante energia.'},
   {out:'cabaca',n:1,era:'pedra',need:[['abobora',1],['fibra',1]],desc:'Abóbora seca e oca para carregar água. Encha pela mochila perto de rio, lago ou coletor.'},
   {out:'lanca',n:1,era:'pedra',need:[['madeira',2],['pedra',1],['corda',1]],desc:'Golpe forte de perto contra animais. Dura 60 golpes.'},
   {out:'roupa_couro',n:1,era:'pedra',st:'bench',need:[['couro',4],['fibra',2],['corda',1]],desc:'Vestida enquanto estiver na mochila: reduz o dano dos animais em 40%, molha menos e protege do frio.'},
@@ -895,7 +918,7 @@ RECIPES.push({out:'fio',n:4,era:'vapor',need:[['barra_cobre',1]],desc:'Cobre pux
 RECIPES.push({out:'canoa',n:1,era:'pedra',need:[['madeira',10],['corda',2]],desc:'Canoa escavada num tronco. Segure perto da água para pôr no rio, depois embarque. Na água ela é rápida.'});
 RECIPES.push({out:'emplastro',n:1,era:'pedra',need:[['folhas_guaco',3],['fibra',1]],desc:'Folhas de guaco amassadas. Aplicado na picada, cura o veneno de cobra.'});
 Object.assign(RETURNS,{cha_boldo:'cabaca',cha_quina:'cabaca'});
-const SEEDOF={ipeA:'semente_ipe',ipeR:'semente_ipe',jatoba:'semente_jatoba',pitanga:'semente_pitanga',buriti:'semente_buriti'},SAPL={semente_ipe:['ipeA','ipeR'],semente_jatoba:['jatoba'],semente_pitanga:['pitanga'],semente_buriti:['buriti']};
+const SEEDOF={ipeA:'semente_ipe',ipeR:'semente_ipe',jatoba:'semente_jatoba',pitanga:'semente_pitanga',buriti:'semente_buriti',cacau:'semente_cacau',acai:'semente_acai'},SAPL={semente_ipe:['ipeA','ipeR'],semente_jatoba:['jatoba'],semente_pitanga:['pitanga'],semente_buriti:['buriti'],semente_cacau:['cacau'],semente_acai:['acai']};
 const TAMEFOOD={galinha:['semente_milho','milho'],cabra:['folhas','mandioca'],vaca:['milho','folhas'],porco:['abobora','mandioca']},TRUSTN={galinha:3,cabra:4,vaca:5,porco:4};
 const isLive=id=>/^(galinha|cabra|vaca|porco)_viva$/.test(id||'');
 const SP={};
@@ -905,6 +928,7 @@ function buildSprites(){const r=mb(20261105),three=f=>[0,1,2].map(f);
   SP.helic=three(()=>buildHelic(r));SP.fern=three(()=>buildFern(r));SP.rock=three(()=>buildRock(r,null));SP.iron=three(()=>buildRock(r,'iron'));SP.copper=three(()=>buildRock(r,'copper'));
   SP.stump=three(()=>buildStump(r));SP.colmeia=three(()=>buildHive(r));SP.casa=three(()=>buildCasa(r));SP.barraca=three(()=>buildMudaSprite());SP.fogV=three(()=>buildMudaSprite());SP.guaco=three(()=>buildHerb(r,'guaco'));SP.boldo=three(()=>buildHerb(r,'boldo'));SP.quina=three(()=>buildHerb(r,'quina'));SP.muda=three(()=>buildMudaSprite());SP.mangue=three(()=>buildMangue(r));SP.paredao=three(()=>buildCliff(r));SP.carvaoM=three(()=>buildRock(r,'coal'));SP.carcaca=three(()=>buildCarcass(r));
   SP.mandiocaW=three(()=>buildCropSprite('mandioca',r));SP.milhoW=three(()=>buildCropSprite('milho',r));SP.aboboraW=three(()=>buildCropSprite('abobora',r));
+  SP.cacau=three(()=>buildCacau(r));SP.acai=three(()=>buildAcai(r));
 }
 
 /* ---------- item icons ---------- */
@@ -933,6 +957,12 @@ function drawItem(x,id){
   else if(id==='cera'){for(const[cx,cy]of[[-7,-5],[6,-5],[0,6],[-13,6],[12,6]]){x.fillStyle='#e8c050';x.beginPath();for(let k=0;k<6;k++){const a=k/6*TAU+Math.PI/6;x.lineTo(cx+Math.cos(a)*6.5,cy+Math.sin(a)*6.5)}x.closePath();x.fill();x.strokeStyle='#b8901c';x.lineWidth=1;x.stroke();C2(x,cx,cy,2.2,'#f6dc80')}}
   else if(id==='ovo'){E2(x,-6,3,8,10,'#efe0c4');E2(x,7,5,7,9,'#e4cfa6');E2(x,-8,-1,2.5,3,'rgba(255,255,255,.5)')}
   else if(id==='ovo_cozido'){for(const cx of[-7,7]){E2(x,cx,2,8,10,'#f6f2ea');C2(x,cx,3,4.5,'#f2b630')}}
+  else if(id==='cacau'){x.rotate(-.5);const g=x.createLinearGradient(-8,0,8,0);g.addColorStop(0,'#9a3e1a');g.addColorStop(.5,'#e0a42a');g.addColorStop(1,'#b8561a');x.fillStyle=g;x.beginPath();x.ellipse(0,0,10,17,0,0,TAU);x.fill();x.strokeStyle='rgba(80,30,8,.45)';x.lineWidth=1.2;for(const k of[-5,0,5]){x.beginPath();x.moveTo(k,-15);x.quadraticCurveTo(k*1.5,0,k,15);x.stroke()}R2(x,-1.5,-21,3,5,1,'#5c3f27')}
+  else if(id==='acai'){x.strokeStyle='#8a5a2a';x.lineWidth=1.6;for(const k of[-8,-3,2,7]){x.beginPath();x.moveTo(0,-18);x.lineTo(k,8);x.stroke()}for(const[cx,cy]of[[-9,-2],[-4,4],[2,-4],[7,2],[-6,10],[1,9],[8,10],[-1,1],[4,-10],[-5,-9],[10,-5],[-11,5]]){C2(x,cx,cy,4,'#3a1640');C2(x,cx-1.2,cy-1.2,1.2,'rgba(220,180,255,.35)')}}
+  else if(id==='semente_cacau'){for(const[cx,cy,a]of[[-6,2,.4],[6,4,-.3],[0,-6,.1]]){x.save();x.translate(cx,cy);x.rotate(a);E2(x,0,0,4.5,7,'#6e3a1e');E2(x,-1,-2,1.5,3,'rgba(255,200,150,.3)');x.restore()}}
+  else if(id==='semente_acai'){for(const[cx,cy]of[[-7,4],[6,5],[0,-5],[-2,8]]){C2(x,cx,cy,5,'#5a4a3a');C2(x,cx-1.5,cy-1.5,1.5,'rgba(255,255,255,.3)')}}
+  else if(id==='chocolate'){x.rotate(-.2);R2(x,-16,-11,32,22,3,'#4a2614');x.strokeStyle='#2e160a';x.lineWidth=1.4;for(const k of[-5.5,5.5]){x.beginPath();x.moveTo(k,-11);x.lineTo(k,11);x.stroke()}x.beginPath();x.moveTo(-16,0);x.lineTo(16,0);x.stroke();R2(x,-14,-9,9,3,1,'rgba(255,220,180,.18)')}
+  else if(id==='tigela_acai'){E2(x,0,-2,17,6,'#4e2058');E2(x,-4,-4,6,2,'rgba(220,170,255,.35)');for(const[cx,cy]of[[-8,-3],[6,-4],[0,-1]])C2(x,cx,cy,2.6,'#f3e6b8');x.fillStyle='#b98a5a';x.beginPath();x.moveTo(-18,-1);x.quadraticCurveTo(-16,16,0,16);x.quadraticCurveTo(16,16,18,-1);x.closePath();x.fill();x.fillStyle='rgba(0,0,0,.15)';x.fillRect(-12,10,24,2)}
   else if(id==='queijo'){x.fillStyle='#f3e6b8';x.beginPath();x.moveTo(-16,8);x.lineTo(16,8);x.lineTo(16,-2);x.lineTo(-6,-12);x.lineTo(-16,-2);x.closePath();x.fill();x.fillStyle='#e2cf8e';x.fillRect(-16,1,32,7);x.strokeStyle='#a8742e';x.lineWidth=2;for(const gx of[-9,-1,7]){x.beginPath();x.moveTo(gx,-6);x.lineTo(gx+5,4);x.stroke()}x.strokeStyle='#6b4a2a';x.lineWidth=2;x.beginPath();x.moveTo(0,8);x.lineTo(0,19);x.stroke()}
   else if(id==='leite'){const g=x.createLinearGradient(-10,0,10,0);g.addColorStop(0,'#b07848');g.addColorStop(1,'#7a4e2c');x.fillStyle=g;x.beginPath();x.moveTo(-9,-8);x.lineTo(9,-8);x.lineTo(12,16);x.lineTo(-12,16);x.closePath();x.fill();E2(x,0,-8,9,3,'#f6f2ea');R2(x,-11,-1,22,4,1,'#5a3a20')}
   else if(id==='folhas_guaco'||id==='folhas_boldo'){const gc=id==='folhas_guaco'?['#3f8a3a','#7cc062']:['#7a9a78','#b8d0b0'];for(const[r,o]of[[-.6,-4],[.1,0],[.8,4]]){x.save();x.rotate(r);x.translate(o,0);const g=x.createLinearGradient(-8,0,8,0);g.addColorStop(0,gc[0]);g.addColorStop(1,gc[1]);x.fillStyle=g;x.beginPath();if(id==='folhas_guaco'){x.moveTo(0,15);x.bezierCurveTo(-14,2,-10,-14,0,-8);x.bezierCurveTo(10,-14,14,2,0,15)}else{x.ellipse(0,0,7,14,0,0,TAU)}x.fill();x.strokeStyle='rgba(255,255,255,.35)';x.lineWidth=.8;x.beginPath();x.moveTo(0,13);x.lineTo(0,-8);x.stroke();x.restore()}}
@@ -1024,10 +1054,11 @@ const PIECES=[
   {k:18,id:'motor',era:'vapor',name:'Máquina a vapor',cost:[['barra_ferro',8],['barra_cobre',4],['tabua',4]],desc:'Encostada numa caldeira quente, gera 25 de força nos eixos, em qualquer lugar do mapa.'},
   {k:7,id:'roda',era:'cobre',name:"Roda d'água",cost:[['madeira',10],['corda',2],['barra_cobre',2]],desc:'Vai na margem de rio ou lago e gera 10 de força, girando os eixos ligados a ela.'},
   {k:30,id:'eixo',era:'cobre',name:'Eixo de madeira',cost:[['madeira',1]],desc:'Leva a força em linha reta. Use Girar para escolher a direção.'},
+  {k:58,id:'manivela',era:'cobre',name:'Manivela',cost:[['madeira',3],['corda',1]],desc:'Força feita à mão: toque várias vezes ou segure a ação para girar. Dá 8 de força a eixos e máquinas encostadas. Cansa um pouco.'},
   {k:32,id:'engrenagem',era:'cobre',name:'Engrenagem',cost:[['madeira',2],['barra_cobre',1]],desc:'Junta eixos de qualquer lado: faz curvas, cruzamentos e divisões.'},
   {k:33,id:'alavanca',era:'cobre',name:'Alavanca',cost:[['madeira',2],['corda',1]],desc:'Fica na linha de eixos e liga ou desliga a força que passa por ela.'},
   {k:8,id:'serraria',era:'cobre',name:'Serraria',cost:[['madeira',6],['barra_cobre',3],['pedra',4]],desc:'Movida por eixo, transforma cada madeira em 2 tábuas sozinha. Usa 6 de força.'},
-  {k:12,id:'fole',era:'cobre',name:'Fole',cost:[['madeira',4],['fibra',4],['barra_cobre',1]],desc:'Ao lado da fornalha, sopra ar para ela derreter ferro. Usa 4 de força.'},
+  {k:12,id:'fole',era:'cobre',name:'Fole',cost:[['madeira',4],['fibra',4],['barra_cobre',1]],desc:'Ao lado da fornalha, sopra ar: derrete ferro e deixa tudo 80% mais rápido. Toque nele várias vezes para soprar à mão, ou ligue a um eixo (4 de força).'},
   {k:9,id:'coletor',era:'cobre',name:'Coletor de chuva',cost:[['tabua',4],['fibra',2]],desc:'Junta até 100 litros quando chove. Dá para beber dele e mandar a água por canos.'},
   {k:31,id:'cano',era:'cobre',name:'Cano de madeira',cost:[['cano',1]],desc:'Leva a água do coletor ou da bomba. Molha a terra até 2 casas para cada lado e pode passar no meio da roça arada.'},
   {k:11,id:'canteiro',era:'cobre',name:'Viveiro de mudas',cost:[['tabua',3],['terra',2]],desc:'Ponha uma semente de árvore. Com água (chuva, cano, rio perto ou irrigador) ele produz mais sementes dela: cerca de 1 por dia, até 4.'},
@@ -1154,6 +1185,10 @@ function rodH(x,x0,x1,sy,ph){R2(x,x0,sy-2.5,x1-x0,5,2,'#8a5d36');x.save();x.begi
 function rodV(x,cx,y0,y1,ph){R2(x,cx-2.5,y0,5,y1-y0,2,'#8a5d36');x.save();x.beginPath();x.rect(cx-3,y0,6,y1-y0);x.clip();x.fillStyle='rgba(60,35,15,.6)';const off=(ph*40)%8;for(let q=Math.floor(y0/8)*8-8+off;q<y1;q+=8)x.fillRect(cx-2.5,q,5,2);x.restore();x.fillStyle='rgba(255,230,190,.25)';x.fillRect(cx-2.5,y0,1,y1-y0)}
 function drawGearbox(x,cx,sy,ph){R2(x,cx-9,sy-5,18,14,3,'#6b4528');R2(x,cx-9,sy-5,18,4,2,'#8a5d36');x.save();x.translate(cx,sy-6);x.rotate(ph*3);x.fillStyle='#b58450';x.beginPath();for(let k=0;k<20;k++){const an=k/20*TAU,r=k%2?6:8.5;x.lineTo(Math.cos(an)*r,Math.sin(an)*r)}x.closePath();x.fill();C2(x,0,0,2.4,'#4f331d');x.restore()}
 function drawLever(x,cx,sy,on){R2(x,cx-8,sy-3,16,11,2,'#5c4024');x.save();x.translate(cx,sy-2);x.rotate(on?-.7:.7);x.strokeStyle='#3a3f44';x.lineWidth=2.6;x.beginPath();x.moveTo(0,0);x.lineTo(0,-15);x.stroke();C2(x,0,-15,2.8,on?'#a6d16a':'#e0604a');x.restore()}
+function drawManivela(x,cx,cy,a){R2(x,cx-15,cy-5,30,12,3,'#77715f');R2(x,cx-15,cy-5,30,4,2,'#8f8975');
+  R2(x,cx-8,cy-26,16,22,2,'#7a5232');R2(x,cx-9,cy-28,18,5,2,'#5c3f27');x.strokeStyle='rgba(30,15,5,.35)';x.lineWidth=1;x.beginPath();x.moveTo(cx-8,cy-15);x.lineTo(cx+8,cy-15);x.stroke();
+  const hx=cx,hy=cy-17,ex=hx+Math.cos(a)*11,ey=hy+Math.sin(a)*7;C2(x,hx,hy,4.5,'#4a3220');C2(x,hx,hy,2,'#c9a46a');
+  x.strokeStyle='#5c3f27';x.lineWidth=3.2;x.beginPath();x.moveTo(hx,hy);x.lineTo(ex,ey);x.stroke();R2(x,ex-2,ey-9,4,10,1.5,'#c9a46a');R2(x,ex-2,ey-9,4,3,1.5,'#e2c48a')}
 function drawFole(x,cx,cy,t,on){
   R2(x,cx-18,cy-4,36,9,2,'#5c3f27');const c=on?.55+.45*Math.sin(t*5):.7,hg=6+12*c;
   x.fillStyle='#8a5a3a';x.beginPath();x.moveTo(cx-14,cy-4);x.lineTo(cx+8,cy-4);x.lineTo(cx+8,cy-6-hg*.25);x.lineTo(cx-14,cy-4-hg);x.closePath();x.fill();
@@ -1189,6 +1224,7 @@ function drawStructAt(x,k,cx,cy,i,t){
   else if(k===9)drawColetor(x,cx,cy,40);
   else if(k===11)drawCanteiro(x,cx,cy,{seed:'semente_ipe',g:.6,n:2,wet:true});
   else if(k===12)drawFole(x,cx,cy,t,true);
+  else if(k===58)drawManivela(x,cx,cy,t*3);
   else if(k===13)drawCompost(x,cx,cy,{folhas:3,terra:1,sobras:1},t);
   else if(k===15)drawChest(x,cx,cy);
   else if(k===16)drawKiln(x,cx,cy,true,t);
@@ -1270,7 +1306,7 @@ function drawColetor(x,cx,cy,w){
   if(w>1){const f=Math.min(1,.35+w/150);x.globalAlpha=.35+.6*Math.min(1,w/100);E2(x,cx,top+.5,11*f,3.4*f,'#5fb4d0');x.globalAlpha=1}
   x.fillStyle='#5e9a40';for(const sd of[-1,1]){x.beginPath();x.moveTo(cx+sd*9,top-1);x.quadraticCurveTo(cx+sd*22,top-11,cx+sd*25,top-4);x.quadraticCurveTo(cx+sd*18,top+1,cx+sd*9,top+1);x.fill()}
 }
-const VCOL={semente_ipe:['#f0bf2e','#be78d2'],semente_jatoba:['#4f7a36','#4f7a36'],semente_pitanga:['#d0302a','#d0302a'],semente_buriti:['#6aa84a','#6aa84a']};
+const VCOL={semente_ipe:['#f0bf2e','#be78d2'],semente_jatoba:['#4f7a36','#4f7a36'],semente_pitanga:['#d0302a','#d0302a'],semente_buriti:['#6aa84a','#6aa84a'],semente_cacau:['#d2701e','#e0a42a'],semente_acai:['#4e2058','#3a1640']};
 function drawCanteiro(x,cx,cy,m){
   if(!(m.ripe>0)){const g=m.g||0,wet=m.wet!==false,n=m.n||0;
     R2(x,cx-22,cy-16,44,28,3,'#7a5232');R2(x,cx-19,cy-13,38,22,2,wet?'#4a3220':'#7a5d3e');R2(x,cx-22,cy+9,44,4,1,'#5c3f27');
@@ -1321,6 +1357,7 @@ function buildPieceIcons(){
     else if(p.k===35){x.translate(24,32);x.scale(1.2,1.2);drawArm(x,0,0,0,.5,null)}
     else if(p.k===13){x.translate(24,38);x.scale(.95,.95);drawCompost(x,0,0,{folhas:3,terra:1,sobras:1,adubo:2},.5)}
     else if(p.k===12){x.translate(24,34);x.scale(1.05,1.05);drawFole(x,0,0,0,true)}
+    else if(p.k===58){x.translate(24,38);x.scale(1.15,1.15);drawManivela(x,0,0,-.6)}
     else if(p.k===11){x.translate(24,30);x.scale(.8,.8);drawCanteiro(x,0,0,{seed:'semente_ipe',g:.6,n:3,wet:true})}
     else if(p.k===10){x.translate(6,6);x.scale(.75,.75);x.drawImage(FLOOR[0].c,0,0,48,48);x.fillStyle='#5c3f27';x.fillRect(0,48,48,4)}
     else if(p.k===54||p.k===57){x.translate(24,46);x.scale(.4,.4);drawStructAt(x,p.k,0,0,-1,0)}
@@ -1445,14 +1482,14 @@ function play(kind){if(MUTE)return;
 let biome,nearW,objAt,spawn={x:64,y:64};
 const miniBase=document.createElement('canvas');miniBase.width=W;miniBase.height=H;
 const TABLE={
-  4:[['jatoba',.10],['ipeA',.015],['ipeR',.01],['pitanga',.03],['helic',.07],['fern',.10],['rock',.01],['mandiocaW',.012],['carcaca',.003],['colmeia',.006],['guaco',.007],['quina',.004]],
-  3:[['jatoba',.02],['ipeA',.025],['ipeR',.012],['pitanga',.03],['helic',.015],['fern',.03],['rock',.02],['iron',.006],['milhoW',.014],['mandiocaW',.01],['aboboraW',.006],['carcaca',.004],['colmeia',.003],['boldo',.008]],
+  4:[['jatoba',.10],['ipeA',.015],['ipeR',.01],['pitanga',.03],['helic',.07],['fern',.10],['rock',.01],['mandiocaW',.012],['carcaca',.003],['colmeia',.006],['guaco',.007],['quina',.004],['cacau',.022],['acai',.006]],
+  3:[['jatoba',.02],['ipeA',.025],['ipeR',.012],['pitanga',.03],['helic',.015],['fern',.03],['rock',.02],['iron',.006],['milhoW',.014],['mandiocaW',.01],['aboboraW',.006],['carcaca',.004],['colmeia',.003],['boldo',.008],['cacau',.004]],
   2:[['mandacaru',.035],['ipeR',.012],['rock',.04],['iron',.02],['copper',.012],['pitanga',.008],['carcaca',.006]],
   5:[['rock',.10],['iron',.04],['copper',.03],['mandacaru',.02]],
-  6:[['mangue',.17],['fern',.02],['carcaca',.004],['guaco',.006]],
+  6:[['mangue',.17],['fern',.02],['carcaca',.004],['guaco',.006],['acai',.025]],
   7:[['rock',.11],['paredao',.045],['iron',.05],['copper',.035],['carvaoM',.03],['mandacaru',.01],['quina',.006]],
   8:[['iron',.05],['copper',.045],['carvaoM',.05],['rock',.025]],
-  1:[['buriti',.10],['fern',.03],['helic',.03],['rock',.015],['aboboraW',.03],['carcaca',.005]]
+  1:[['buriti',.10],['fern',.03],['helic',.03],['rock',.015],['aboboraW',.03],['carcaca',.005],['acai',.05]]
 };
 let inv={},changes={},wear={};
 const ST0=()=>({vida:100,fome:85,sede:85,energia:100,molhado:0,doente:0,veneno:0,febre:0});
@@ -1470,10 +1507,10 @@ const GROW={mandioca:1280,milho:640,abobora:860},CROPK={41:'mandioca',42:'milho'
 const YIELD={mandioca:[['mandioca',5],['rama_mandioca',2]],milho:[['milho',4],['semente_milho',2]],abobora:[['abobora',3],['semente_abobora',2]]};
 let netG=new Uint8Array(W*H),mach=new Map(),netDirty=true,pNet=null,wNet=null,pNets=[],wNets=[],eNet=null,eNets=[];
 const isElecK=k=>k===52||k===54||k===55||k===56||k===57;
-const isPowK=k=>k===52||k===7||k===8||k===12||k===34||k===35||k===18||k===19,isWatK=k=>k===9||k===11||k===17||k===19,isMachK=k=>(k>=52&&k<=57&&k!==53)||k===47||k===48||k===51||k===7||k===8||k===9||k===11||k===12||k===13||k===15||k===34||k===35||(k>=16&&k<=19);
+const isPowK=k=>k===58||k===52||k===7||k===8||k===12||k===34||k===35||k===18||k===19,isWatK=k=>k===9||k===11||k===17||k===19,isMachK=k=>k===58||(k>=52&&k<=57&&k!==53)||k===47||k===48||k===51||k===7||k===8||k===9||k===11||k===12||k===13||k===15||k===34||k===35||(k>=16&&k<=19);
 const DV=[[1,0],[0,1],[-1,0],[0,-1]],dOff=d=>DV[d][0]+DV[d][1]*W;
 function exposes(i,d){const b=netG[i];if(isPowK(blockG[i])||b&8)return true;if(b&16)return levers.get(i)!==false;if(b&1)return d<2;if(b&4)return d>=2;return false}
-const newMach=k=>k===52?{pow:0}:k===54?{e:0}:k===55?{ore:'',n:0,out:{},prog:0,e:0}:k===56?{e:0}:k===57?{e:0,on:0,tx:0,done:0}:k===47?{fish:0,t:0}:k===48?{mel:0,p:0}:k===51?{food:0}:k===16?{in:0,out:0,prog:0}:k===17?{water:0,fuel:0,carv:0,wood:0,heat:0}:k===18?{on:0,ph:0}:k===19?{pow:0}:k===15?{items:{}}:k===34?{d:0,items:[],pow:0}:k===35?{d:0,hold:null,t:0,pow:0}:k===13?{folhas:0,terra:0,sobras:0,adubo:0,prog:0}:k===12?{pow:0}:k===8?{in:0,out:0,prog:0,pow:0}:k===9?{w:0}:k===11?{seed:'',n:0,g:0,wet:false}:{};
+const newMach=k=>k===58?{cr:0,ang:0}:k===52?{pow:0}:k===54?{e:0}:k===55?{ore:'',n:0,out:{},prog:0,e:0}:k===56?{e:0}:k===57?{e:0,on:0,tx:0,done:0}:k===47?{fish:0,t:0}:k===48?{mel:0,p:0}:k===51?{food:0}:k===16?{in:0,out:0,prog:0}:k===17?{water:0,fuel:0,carv:0,wood:0,heat:0}:k===18?{on:0,ph:0}:k===19?{pow:0}:k===15?{items:{}}:k===34?{d:0,items:[],pow:0}:k===35?{d:0,hold:null,t:0,pow:0}:k===13?{folhas:0,terra:0,sobras:0,adubo:0,prog:0}:k===12?{pow:0}:k===8?{in:0,out:0,prog:0,pow:0}:k===9?{w:0}:k===11?{seed:'',n:0,g:0,wet:false}:{};
 function rebuildNets(){
   netDirty=false;pNet=new Int32Array(W*H).fill(-1);wNet=new Int32Array(W*H).fill(-1);eNet=new Int32Array(W*H).fill(-1);pNets=[];wNets=[];eNets=[];const eOk=n=>(netG[n]&32)||isElecK(blockG[n]);
   const pOk=n=>(netG[n]&MECH)||isPowK(blockG[n]),wOk=n=>(netG[n]&2)||isWatK(blockG[n]),DIRS=[[1,0,1],[-1,1,0],[W,2,3],[-W,3,2]];
@@ -1522,13 +1559,15 @@ function stepLogistics(dt){
 }
 function stepMachines(dt){
   if(netDirty)rebuildNets();
-  for(const n of pNets){let sup=0,dem=0;for(const i of n.m){const k=blockG[i];if(k===7)sup+=10;else if(k===8){const m=mach.get(i);if(m&&m.in>0)dem+=6}else if(k===12)dem+=4;else if(k===34)dem+=.25;else if(k===35)dem+=1;else if(k===19)dem+=3;else if(k===52)dem+=5;else if(k===18){const m=mach.get(i);if(m&&m.on)sup+=25}}n.sup=sup;n.dem=dem;n.sat=dem?Math.min(1,sup/dem):sup?1:0}
+  for(const n of pNets){let sup=0,dem=0;for(const i of n.m){const k=blockG[i];if(k===7)sup+=10;else if(k===58){const m=mach.get(i);if(m&&m.cr>0)sup+=8}else if(k===8){const m=mach.get(i);if(m&&m.in>0)dem+=6}else if(k===12)dem+=4;else if(k===34)dem+=.25;else if(k===35)dem+=1;else if(k===19)dem+=3;else if(k===52)dem+=5;else if(k===18){const m=mach.get(i);if(m&&m.on)sup+=25}}n.sup=sup;n.dem=dem;n.sat=dem?Math.min(1,sup/dem):sup?1:0}
   const PRI={54:0,56:1,55:2,57:3},DEM={54:1,56:1,55:3,57:6};
   for(const n of eNets){let sup=0;const dev=[];for(const i of n.m){const k=blockG[i],m=mach.get(i);if(!m)continue;if(k===52)sup+=8*(m.pow||0);else if(DEM[k])dev.push([PRI[k],i,k,m])}dev.sort((a,b)=>a[0]-b[0]);let left=sup,dem=0;for(const[,i,k,m]of dev){dem+=DEM[k];if(left>=DEM[k]-1e-6){m.e=1;left-=DEM[k]}else m.e=0}n.sup=sup;n.dem=dem}
   for(const n of wNets){n.pool=0;n.cols=[];n.pump=false;for(const i of n.m){if(blockG[i]===9){const m=mach.get(i);if(m){n.pool+=m.w;n.cols.push(m)}}else if(blockG[i]===19){const m=mach.get(i);if(m&&m.pow>0)n.pump=true}}if(n.pump)n.pool=Math.max(n.pool,999)}
   for(const[i,m]of mach){const k=blockG[i];
     if(k===8){const n=pNets[pNet[i]];m.pow=n?n.sat:0;if(m.in>0&&m.pow>0){m.prog+=dt/4*m.pow;if(m.prog>=1){m.prog=0;m.in--;m.out+=2;if(maOpen===i)renderMach()}}else if(!m.in)m.prog=0}
-    else if(k===12||k===34||k===35||k===19||k===52){const n=pNets[pNet[i]];m.pow=n?n.sat:0}
+    else if(k===12){const n=pNets[pNet[i]];m.man=Math.max(0,(m.man||0)-dt);m.pow=Math.max(n?n.sat:0,m.man>0?1:0)}
+    else if(k===58){m.cr=Math.max(0,(m.cr||0)-dt);if(m.cr>0)m.ang=(m.ang||0)+dt*7}
+    else if(k===34||k===35||k===19||k===52){const n=pNets[pNet[i]];m.pow=n?n.sat:0}
     else if(k===55){if(m.e&&m.n>0){m.prog+=dt/5;if(m.prog>=1){m.prog=0;m.n--;const b=m.ore==='ferro'?'barra_ferro':'barra_cobre';m.out[b]=(m.out[b]||0)+1;if(!m.n)m.ore=''}}}
     else if(k===56){if(m.e){const tx=i%W,ty=(i/W)|0;for(let j=-3;j<=3;j++)for(let q=-3;q<=3;q++){const c=crops.get((ty+j)*W+tx+q);if(c){c.w=1;c.ir=time}const cm=blockG[(ty+j)*W+tx+q]===11&&mach.get((ty+j)*W+tx+q);if(cm)cm.irr=time}}}
     else if(k===57){if(m.e&&m.on&&!m.done){m.tx+=dt;if(m.tx>=45){m.done=1;m.on=0;stats.radio=1;toast('Rádio','Alguém respondeu!','“Aqui é a Rádio Pioneira. Ouvimos você, sobrevivente!”',ICON.p_radio);play('get');setTimeout(()=>play('craft'),300);save()}}else if(!m.e&&m.on)m.tx=Math.max(0,m.tx-dt*2)}
@@ -1566,7 +1605,8 @@ function machStatus(i){const k=blockG[i],m=mach.get(i)||{};
   if(k===35)return m.pow>0?(m.hold?`Levando ${ITEMS[m.hold].toLowerCase()}`:'Esperando item'):'Parado · sem força no eixo';
   if(k===13){const ok=m.folhas>=3&&m.terra>=1&&m.sobras>=1;return ok?`Compostando · ${m.adubo} adubo pronto`:m.adubo?`${m.adubo} adubo pronto`:'Precisa de 3 folhas, 1 terra e 1 sobra'}
   if(k===7){const n=pNets[pNet[i]];return n&&n.dem?`Força ${n.sup} · máquinas usam ${n.dem}`:'Força 10 · ligue um eixo'}
-  if(k===12){const nf=[1,-1,W,-W].some(d=>blockG[i+d]===5);return m.pow>0?(nf?'Soprando a fornalha':'Girando · coloque ao lado da fornalha'):'Parado · sem força no eixo'}
+  if(k===12){const nf=[1,-1,W,-W].some(d=>blockG[i+d]===5);return m.pow>0?(nf?'Soprando a fornalha':'Soprando · coloque ao lado da fornalha'):'Parado · toque várias vezes para soprar, ou ligue a um eixo'}
+  if(k===58)return m.cr>0?'Girando · 8 de força nos eixos':'Parada · toque várias vezes ou segure para girar';
   if(k===8)return m.pow>0?(m.in?`Serrando · ${m.in} madeira na fila`:'Ligada · coloque madeira'):'Sem força · ligue com eixo';
   if(k===9)return`${Math.round(m.w||0)} de 100 litros${rainI>.15&&!roofG[i]?' · enchendo':''}`;
   if(k===11)return m.ripe?`${m.ripe} mandiocas para colher`:!m.seed?'Vazio · ponha uma semente de árvore':`${ITEMS[m.seed]} · ${m.n||0}/4 prontas${(m.n||0)>=4?'':m.wet?` · ${Math.round((m.g||0)*100)}%`:' · sem água'}`;
@@ -1575,9 +1615,9 @@ const newFurn=()=>({ore:null,n:0,fuel:0,wood:0,out:{},prog:0});
 function folePow(i){let p=0;for(const d of[1,-1,W,-W])if(blockG[i+d]===12){const m=mach.get(i+d);if(m)p=Math.max(p,m.pow||0)}return p}
 const furnActive=(i,f)=>f.n>0&&(f.fuel>0||f.wood>0||f.coal>0)&&(f.ore!=='ferro'||folePow(i)>0);
 const outTotal=f=>Object.values(f.out).reduce((a,b)=>a+b,0);
-function stepFurnaces(dt){for(const[i,f]of furn){if(f.n<=0)continue;const fp=f.ore==='ferro'?folePow(i):1;if(fp<=0)continue;
+function stepFurnaces(dt){for(const[i,f]of furn){if(f.n<=0)continue;const fo=folePow(i);if(f.ore==='ferro'&&fo<=0)continue;const fp=fo>0?1.8:1;
   if(f.fuel<=0&&f.coal>0){f.coal--;f.fuel+=60;if(fuOpen===i)renderFurnace()}else if(f.fuel<=0&&f.wood>0){f.wood--;f.fuel+=20;if(fuOpen===i)renderFurnace()}
-  if(f.fuel>0){f.fuel=Math.max(0,f.fuel-dt);f.prog+=dt/10*fp;
+  if(f.fuel>0){f.fuel=Math.max(0,f.fuel-dt);f.prog+=dt/7*fp;
     if(f.prog>=1){f.prog=0;f.n--;const b='barra_'+f.ore;unlockEra(f.ore);f.out[b]=(f.out[b]||0)+1;if(!f.n)f.ore=null;if(fuOpen===i)renderFurnace()}}}}
 function saveKey(){return(MPG?'mataviva:mp:':'mataviva:')+seedStr}
 var REMOTE=false,MPG=false,LOADOVR=null,MUTE=false;
@@ -1624,6 +1664,7 @@ function generate(txt){
   for(const[i]of[...mach])if(!isMachK(blockG[i]))mach.delete(i);for(let i=0;i<W*H;i++)if(isMachK(blockG[i])&&!mach.has(i))mach.set(i,newMach(blockG[i]));
   for(const k in changes){const i=+k,o=objAt[i];if(!o)continue;if(changes[k]==='s'&&TYPES[o.type].tree){objAt[i]=makeStump(o);if(!planted.has(i))planted.set(i,{t:'stump',from:o.type,g:0})}else if(changes[k]==='x'){objAt[i]=null;if(!planted.has(i)&&REGROW[o.type])planted.set(i,{t:null,back:o.type,left:REGROW[o.type]*Math.random()})}}
   for(const[i,e]of planted){const x=(i%W+.5)*T,y=(((i/W)|0)+.5)*T+4,base={v:i%3,x,y,ph:(i*1.7)%TAU,i};objAt[i]=!e.t?null:e.t==='muda'?Object.assign(base,{type:'muda',grow:e.to,g:e.g||0}):e.t==='stump'?Object.assign(makeStump(base),{from:e.from||null,g:e.g||0}):Object.assign(base,{type:e.t})}
+  for(let i=0;i<W*H;i++){const o=objAt[i];if(o&&(o.type==='cacau'||o.type==='acai')&&!planted.has(i)&&(floorG[i]||blockG[i]||roofG[i]||netG[i]||soilG[i]||crops.has(i)))objAt[i]=null}
   placeVillage();
   const mx=miniBase.getContext('2d'),id=mx.createImageData(W,H);
   for(let ty=0;ty<H;ty++)for(let tx=0;tx<W;tx++){groundRGB(tx+.5,ty+.5,GC);const o=objAt[ty*W+tx],k=(ty*W+tx)*4,f=o&&TYPES[o.type].big?.62:1;id.data[k]=GC[0]*f;id.data[k+1]=GC[1]*f;id.data[k+2]=GC[2]*f;id.data[k+3]=255}
@@ -1706,7 +1747,7 @@ function thingAt(sx,sy){const wx=(sx-vw/2)/zoom+cam.x,wy=(sy-vh/2)/zoom+cam.y;
   for(let j=0;j<=3;j++)for(let i=-1;i<=1;i++){const q=(ty+j)*W+tx+i;if(q<0||q>=W*H)continue;const o=objAt[q];if(!o||o.burnt>time||TYPES[o.type].fixed||o.picked)continue;const v=SP[o.type]&&SP[o.type][o.v];if(!v)continue;
     const hw=Math.max(18,(v.sh?v.sh.rx:20)*.9);if(wx>o.x-hw&&wx<o.x+hw&&wy>o.y+v.top&&wy<o.y+8)cand('obj',o,o.x,o.y,Math.abs(wx-o.x)*.5+Math.max(0,wy-o.y)+20)}
   return best}
-function interactK(q){const k=blockG[q];if(k===5||k===8||k===13||k===15||k===16||k===17||k===51||k===55||k===57)return k;if(k===6&&canSleep())return k;if(k===9&&poolAt(q)>=10)return k;const m=mach.get(q)||{};if(k===11)return k;if(k===47&&m.fish>0)return k;if(k===48&&m.mel>0)return k;return 0}
+function interactK(q){const k=blockG[q];if(k===12||k===58||k===5||k===8||k===13||k===15||k===16||k===17||k===51||k===55||k===57)return k;if(k===6&&canSleep())return k;if(k===9&&poolAt(q)>=10)return k;const m=mach.get(q)||{};if(k===11)return k;if(k===47&&m.fish>0)return k;if(k===48&&m.mel>0)return k;return 0}
 function tapAt(sx,sy){if(bmode||fainted)return false;const th=thingAt(sx,sy);if(!th)return false;const reach=th.kind==='npc'?4*T:th.kind==='animal'?2.2*T:2.9*T;
   if(Math.hypot(th.bx-P.x,th.by-P.y)>reach){floats.push({x:th.bx,y:th.by-60,text:'Chegue mais perto',life:1.2});return true}
   const dx=th.bx-P.x,dy=th.by-P.y;if(Math.abs(dx)>Math.abs(dy))P.dir=dx>0?'right':'left';else P.dir=dy>0?'down':'up';
@@ -1931,7 +1972,7 @@ function build(k,i){
   if(k===40){soilG[i]=1;wear.enxada=wearOf('enxada')-1;if(wear.enxada<=0){inv.enxada--;if(!inv.enxada)delete inv.enxada;wear.enxada=TOOLS.enxada.max;floats.push({x:P.x,y:P.y-80,text:'A enxada quebrou',life:1.8})}give('terra',1,(i%W+.5)*T,((i/W)|0)*T,0)}
   else if(CROPK[k])crops.set(i,{sp:CROPK[k],g:0,w:soilWet(i)?1:0,f:false,ripe:false});
   else if(k===45||k===46){const c=crops.get(i);c.f=k===46?2:true;for(let n=0;n<8;n++)parts.push({x:(i%W+.5)*T+(Math.random()-.5)*30,y:((i/W)|0)*T+30,z:10,vx:0,vy:0,vz:20,life:.6,c:'#3a2414',s:2,r:0})}
-  else if(k===10||k===14)floorG[i]=k;else if(k===20)roofG[i]=20;else if(k<30||k===34||k===35||(k>=47&&k<=57&&k!==53))blockG[i]=k;
+  else if(k===10||k===14)floorG[i]=k;else if(k===20)roofG[i]=20;else if(k<30||k===34||k===35||k===58||(k>=47&&k<=57&&k!==53))blockG[i]=k;
   if(k===5)furn.set(i,newFurn());
   if(k===30)netG[i]|=bRot==='H'?1:4;if(k===31)netG[i]|=2;if(k===32)netG[i]|=8;if(k===33){netG[i]|=16;levers.set(i,true)}if(k===53)netG[i]|=32;if(isMachK(k)){mach.set(i,newMach(k));if(k===34||k===35)mach.get(i).d=bDir}netDirty=true;
   const tx=i%W,ty=(i/W)|0;for(let n=0;n<8;n++)parts.push({x:(tx+.5)*T+(Math.random()-.5)*30,y:(ty+.5)*T+(Math.random()-.5)*20,z:4,vx:(Math.random()-.5)*60,vy:(Math.random()-.5)*30,vz:40+Math.random()*60,life:.5+Math.random()*.3,c:n%2?'#c9a27a':'#8c644b',s:2,r:0});
@@ -1986,7 +2027,7 @@ let fuOpen=-1;const furnEl=document.getElementById('furnace'),fuBody=document.ge
 function openFurnace(i){fuOpen=i;furnEl.hidden=false;bagEl.hidden=true;craftEl.hidden=true;buildEl.hidden=true;renderFurnace()}
 function closeFurnace(){fuOpen=-1;furnEl.hidden=true}
 document.getElementById('fuClose').addEventListener('click',closeFurnace);
-function fuStatusText(i,f){return f.n>0?(f.ore==='ferro'&&folePow(i)<=0?'Parada: o ferro precisa de um fole funcionando ao lado':furnActive(i,f)?`Queimando · ${f.n} ${f.n>1?'barras':'barra'} na fila`:'Parada: coloque madeira'):(outTotal(f)?'Pronto: retire as barras':'Vazia: coloque minério e madeira')}
+function fuStatusText(i,f){return f.n>0?(f.ore==='ferro'&&folePow(i)<=0?'Parada: o ferro precisa de ar. Toque no fole ao lado várias vezes, ou ligue-o a um eixo':furnActive(i,f)?`Queimando · ${f.n} ${f.n>1?'barras':'barra'} na fila${folePow(i)>0?' · fole soprando, mais rápido':''}`:'Parada: coloque madeira'):(outTotal(f)?'Pronto: retire as barras':'Vazia: coloque minério e madeira')}
 function renderFurnace(){
   const f=furn.get(fuOpen);if(!f){closeFurnace();return}
   const oreBtns=['ferro','cobre'].map(id=>{const h=inv[id]||0,ok=h>0&&(!f.ore||f.ore===id);return`<button class="btn" type="button" data-fu="ore:${id}:1"${ok?'':' disabled'}>+1 ${id}</button><button class="btn" type="button" data-fu="ore:${id}:999"${ok?'':' disabled'}>Todo ${id} (${h})</button>`}).join('');
@@ -2012,7 +2053,7 @@ function furnOp(i,op,id,n){
 function findInteract(){let best=null;const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);
   for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){const q=(ty+j)*W+tx+i;if(q<0||q>=W*H)continue;const cr=crops.get(q);if(cr&&cr.ripe){const d=Math.hypot((tx+i+.5)*T-P.x,(ty+j+.5)*T-P.y);if(d<70&&(!best||d<best.d))best={i:q,k:41,d};continue}
     const lv=netG[q]&16;if(lv){const d=Math.hypot((tx+i+.5)*T-P.x,(ty+j+.5)*T-P.y);if(d<70&&(!best||d<best.d))best={i:q,k:33,d};continue}
-    const k=blockG[q];if(!(k===5||k===8||k===13||k===15||k===16||k===17||(k===6&&canSleep())||(k===9&&poolAt(q)>=10)||k===11||(k===47&&(mach.get(q)||{}).fish>0)||(k===48&&(mach.get(q)||{}).mel>0)||k===51||k===55||k===57))continue;
+    const k=blockG[q];if(!(k===12||k===58||k===5||k===8||k===13||k===15||k===16||k===17||(k===6&&canSleep())||(k===9&&poolAt(q)>=10)||k===11||(k===47&&(mach.get(q)||{}).fish>0)||(k===48&&(mach.get(q)||{}).mel>0)||k===51||k===55||k===57))continue;
     const d=Math.hypot((tx+i+.5)*T-P.x,(ty+j+.5)*T-P.y);if(d<70&&(!best||d<best.d))best={i:q,k,d}}return best}
 /* ---------- sawmill panel ---------- */
 let maOpen=-1;const maEl=document.getElementById('mach'),maBody=document.getElementById('maBody');
@@ -2127,7 +2168,7 @@ function stepAnimals(dt){
       if(a.fl>0){a.vx=dx/d*S2.run;a.vy=dy/d*S2.run;tz=S2.cave?30:S2.kind==='tree'?alt:Math.max(alt,80)+15}
       else if(S2.ground){if(a.t<=0||a.gx==null){const an=Math.random()*TAU,rr=Math.random()*S2.R*T;a.gx=a.hx+Math.cos(an)*rr;a.gy=a.hy+Math.sin(an)*rr*.7}const gd=Math.hypot(a.gx-a.x,a.gy-a.y)||1;if(gd>6){a.vx=(a.gx-a.x)/gd*S2.walk;a.vy=(a.gy-a.y)/gd*S2.walk}else a.vx=a.vy=0;tz=0}
       else{a.ang+=dt*(S2.cave?2.2:S2.kind==='tree'?.25:.55)*(a.herd%2?1:-1);const R0=S2.cave?2.2*T:(S2.R||3.5)*T,tx=a.hx+Math.cos(a.ang+a.t)*R0,ty=a.hy+Math.sin(a.ang+a.t)*R0*.7,hd=Math.hypot(tx-a.x,ty-a.y)||1,v=Math.min(S2.walk,hd*2);a.vx=(tx-a.x)/hd*v;a.vy=(ty-a.y)/hd*v;tz=S2.cave?22+Math.sin(time*5+a.ang)*6:alt+Math.sin(time+a.ang)*(S2.kind==='tree'?3:10)}
-      if((a.sp==='arara'||a.sp==='tucano')&&!a.fl&&d<12*T){a.sd=(a.sd==null?20+Math.random()*50:a.sd)-dt;if(a.sd<=0){a.sd=45+Math.random()*80;const pool=a.sp==='arara'?['semente_jatoba','semente_buriti']:['semente_pitanga','semente_ipe'];gdrops.push({x:a.x,y:a.y,z:a.z,vz:0,id:pool[Math.random()*2|0],n:1,t:300})}}
+      if((a.sp==='arara'||a.sp==='tucano')&&!a.fl&&d<12*T){a.sd=(a.sd==null?20+Math.random()*50:a.sd)-dt;if(a.sd<=0){a.sd=45+Math.random()*80;const pool=a.sp==='arara'?['semente_jatoba','semente_buriti','semente_cacau']:['semente_pitanga','semente_ipe','semente_acai'];gdrops.push({x:a.x,y:a.y,z:a.z,vz:0,id:pool[Math.random()*2|0],n:1,t:300})}}
       if(a.t<=0)a.t=2+Math.random()*3;a.z+=(tz-a.z)*Math.min(1,dt*2);a.x=clamp(a.x+a.vx*dt,2*T,(W-2)*T);a.y=clamp(a.y+a.vy*dt,2*T,(H-2)*T);if(Math.abs(a.vx)>3)a.dir=a.vx<0?-1:1;a.mode=a.fl>0?'flee':'wander';continue}
     if(a.tame){if(a.hurt>0)mode='flee';else if(lured(a)&&d<6*T)mode='follow';farmStep(a,dt)}
     else if(S2.kind==='prey'){if(lured(a)&&d<5*T&&!a.hurt)mode='follow';else if(d<S2.flee||a.hurt>0)mode='flee'}
@@ -2336,6 +2377,10 @@ function drawGround(){for(const g of gdrops){const im=iconImg(g.id);const b=g.z>
   if(mosq.length){ctx.fillStyle='rgba(20,18,16,.85)';for(const m of mosq){ctx.beginPath();ctx.arc(P.x+Math.cos(m.a)*m.r,P.y-m.h+Math.sin(m.a*1.7)*6,1.1,0,TAU);ctx.fill()}}}
 function stepDrops(dt){for(const g of gdrops){if(g.z>0){g.vz-=420*dt;g.z=Math.max(0,g.z+g.vz*dt)}g.t-=dt;if(!g.z&&!fainted&&Math.hypot(g.x-P.x,g.y-P.y)<34){give(g.id,g.n,g.x,g.y-30,0);g.t=-1;play('get');updateBar()}}if(gdrops.some(g=>g.t<=0))gdrops=gdrops.filter(g=>g.t>0)}
 let spreadT=12;
+function pump(i){const k=blockG[i],m=mach.get(i);if(!m)return;const cx=(i%W+.5)*T,cy=(((i/W)|0)+.5)*T;
+  if(k===12){m.man=Math.min(1.8,(m.man||0)+.85);m.pow=1;for(let q=0;q<4;q++)parts.push({x:cx+18,y:cy-2,z:6,vx:40+Math.random()*30,vy:(Math.random()-.5)*14,vz:8,life:.45,c:'rgba(210,210,200,.7)',s:2.6,r:0});const f=[1,-1,W,-W].map(d=>i+d).find(q=>blockG[q]===5);if(f!=null)for(let q=0;q<3;q++)parts.push({x:(f%W+.5)*T+(Math.random()-.5)*16,y:(((f/W)|0)+.5)*T,z:26,vx:(Math.random()-.5)*20,vy:0,vz:40+Math.random()*30,life:.5,c:'#ffb040',s:2,r:0});play('rustle')}
+  else if(k===58){m.cr=Math.min(1.8,(m.cr||0)+.85);m.ang=(m.ang||0)+.9;play('rustle')}
+  else if(k===8&&m.in>0){m.prog=(m.prog||0)+.2;for(let q=0;q<5;q++)parts.push({x:cx+4,y:cy-2,z:24,vx:(Math.random()-.5)*60,vy:(Math.random()-.5)*20,vz:20+Math.random()*30,life:.6,c:'#e8cf9a',s:1.8,r:0});if(m.prog>=1){m.prog=0;m.in--;m.out+=2;floats.push({x:cx,y:cy-50,text:'+2 tábuas',life:1.3});if(maOpen===i)renderMach()}play('wood')}}
 function regaOk(i){if(i<0)return false;const tx=i%W,ty=(i/W)|0;if(Math.hypot((tx+.5)*T-P.x,(ty+.5)*T-P.y)>3.3*T)return false;for(let j=-1;j<=1;j++)for(let k=-1;k<=1;k++){const c=crops.get((ty+j)*W+tx+k);if(c&&!c.ripe&&c.w<4)return true}return false}
 function rega(i){if(!(inv.balde_agua>0)||i<0)return;inv.balde_agua--;if(!inv.balde_agua)delete inv.balde_agua;inv.balde=(inv.balde||0)+1;const tx=i%W,ty=(i/W)|0;let n=0;
   for(let j=-1;j<=1;j++)for(let k=-1;k<=1;k++){const q=(ty+j)*W+tx+k,c=crops.get(q);if(c){c.w=Math.max(c.w,4);n++}for(let z=0;z<3;z++)parts.push({x:(tx+k+.5)*T+(Math.random()-.5)*30,y:(ty+j+.5)*T,z:14,vx:(Math.random()-.5)*30,vy:(Math.random()-.5)*14,vz:20+Math.random()*30,life:.5,c:'#bfe3f0',s:2,r:0})}
@@ -2408,7 +2453,7 @@ const VNAMES=['Vila do Buriti','Arraial do Ipê','Povoado da Pitanga','Vila Boa 
 const NPCS=[
   {id:'benedita',name:'Dona Benedita',role:'Feira',kind:'feira',dx:-3,dy:-1,cc:{skin:'#7a4a2c',skinL:'#946040',skinD:'#5e3620',shirt:'#c8402e',shirtL:'#e06a50',shirtD:'#962e20',hat:'#f2ece0',hatL:'#ffffff',hatD:'#c8c0b0',pants:'#5a3a5a',pantsD:'#3e283e'},
    say:['Milho bonito! Tem mais desse?','Semente boa dá roça farta.','Ovo fresco eu compro todo dia.'],
-   buy:[['milho',4,2],['mandioca',3,2],['abobora',2,2],['pitanga',6,1],['ovo',4,2],['leite',2,2],['peixe_assado',2,3]],sell:[['semente_milho',3,2],['rama_mandioca',2,2],['semente_abobora',2,2],['mel',1,4],['semente_pitanga',1,3],['galinha_viva',1,8],['porco_viva',1,9],['vaca_viva',1,16]]},
+   buy:[['milho',4,2],['mandioca',3,2],['abobora',2,2],['pitanga',6,1],['ovo',4,2],['leite',2,2],['peixe_assado',2,3],['cacau',3,2],['acai',4,2]],sell:[['semente_milho',3,2],['rama_mandioca',2,2],['semente_abobora',2,2],['mel',1,4],['semente_pitanga',1,3],['galinha_viva',1,8],['porco_viva',1,9],['vaca_viva',1,16]]},
   {id:'tiao',name:'Seu Tião',role:'Ferreiro',kind:'ferreiro',dx:3,dy:-1,cc:{skin:'#c48a5f',skinL:'#d8a078',skinD:'#9a6640',shirt:'#4a4a52',shirtL:'#64646e',shirtD:'#34343a',hat:'#3a281c',hatL:'#5a4030',hatD:'#2a1c12',pants:'#3a3028',pantsD:'#2a221c'},
    say:['Bate o ferro enquanto está quente.','Traz minério que eu pago bem.','Panela de cobre não estraga a comida.'],
    buy:[['ferro',4,3],['cobre',4,3],['carvao',4,2],['couro',2,2],['ossos',5,1]],sell:[['barra_cobre',1,4],['barra_ferro',1,6],['flecha',8,3],['panela',1,10],['picareta_cobre',1,14],['machado_cobre',1,14]]},
@@ -2462,7 +2507,7 @@ function doTrade(v,side,k){const n=villagers[v];if(!n)return;const d=n.def,o=(si
   vstate.u[`${d.id}:${side}:${k}`]=(vstate.u[`${d.id}:${side}:${k}`]||0)+1;stats.trades++;play('get');save();updateBar();renderTrade()}
 /* ---------- multiplayer: live room (claude.ai) with same-browser fallback ---------- */
 const MPCOL=[['#5f6e3b','#9fbf5e','#434f29'],['#3b5f8a','#6fa0dc','#2a4566'],['#8a3b3b','#e07a6a','#662a2a'],['#7a5aa0','#b896e0','#5a3e7a'],['#3b8a7a','#6fd4be','#2a6658'],['#a0782a','#f2c230','#7a5a18']];
-const REPL=new Set(['rega','eforno','radio','hit','build','unbuild','fu','ma','reap','plot','lever','release','collect','feed','sow','douse','dig','ch']);
+const REPL=new Set(['pump','rega','eforno','radio','hit','build','unbuild','fu','ma','reap','plot','lever','release','collect','feed','sow','douse','dig','ch']);
 const DIR4=['down','up','left','right'],MPCH=1900;
 const mp={uid:Math.random().toString(36).slice(2,10),joining:false,on:false,host:false,room:null,src:'',code:'',ready:false,seq:0,out:[],seen:new Map(),snap:null,sentIds:new Set(),parts:{},hostPeer:null,t:0,ct:0,myC:0,prevSeed:null,unsub:null,lastRx:new Map()};
 const others=new Map(),mpEl=document.getElementById('mpPanel');
@@ -2628,6 +2673,7 @@ function applyCmd(cmd){
   else if(cmd.t==='reap')reap(cmd.i);
   else if(cmd.t==='fill')fill(cmd.c);
   else if(cmd.t==='rega')rega(cmd.i);
+  else if(cmd.t==='pump')pump(cmd.i);
   else if(cmd.t==='shoot')shoot(cmd.a);
   else if(cmd.t==='melee')melee(cmd.a);
   else if(cmd.t==='equip')setEquip(cmd.id);
@@ -2688,11 +2734,11 @@ function hit(o,want){
   const v=SP[o.type][o.v],ly=o.y+v.top;
   const rich=biome[o.i]===8&&t.tool==='picareta'&&o.type!=='rock';t.drops.forEach(([id,n],k)=>give(id,n*(rich&&k===0?2:1),o.x,ly,k));
   burst(o,14,!!t.tree);setTimeout(()=>play('get'),90);
-  if(o.type==='pitanga'||o.type==='colmeia'){o.picked=true;o.regrow=time+(o.type==='colmeia'?240:90);o.hp=null}
+  if(t.pick||o.type==='colmeia'){o.picked=true;o.regrow=time+(o.type==='colmeia'?240:t.pick);o.hp=null}
   else if(t.tree&&o.type!=='stump'){objAt[o.i]=makeStump(o);changes[o.i]='s';miniPixel(o.i);planted.set(o.i,{t:'stump',from:o.type,g:0})}
   else if(REGROW[o.type]){objAt[o.i]=null;changes[o.i]='x';if(t.big)miniPixel(o.i);planted.set(o.i,{t:null,back:o.type,left:REGROW[o.type]*(.8+Math.random()*.4)})}
   else{objAt[o.i]=null;changes[o.i]='x';if(t.big)miniPixel(o.i);if(o.type==='stump')planted.set(o.i,{t:null});objChanged(o.i)}
-  if(SEEDOF[o.type]&&Math.random()<(o.type==='pitanga'?.12:.35))give(SEEDOF[o.type],1,o.x,ly,t.drops.length);
+  if(SEEDOF[o.type]&&Math.random()<(t.pick?.15:.35))give(SEEDOF[o.type],1,o.x,ly,t.drops.length);
   save();updateBar();if(!bagEl.hidden)renderBag();
 }
 
@@ -2713,6 +2759,7 @@ function blocked(x,y){
     else if(k===6){if(x>cx-24&&x<cx+24&&y>cy-28&&y<cy+28)return true}
     else if(k===7||k===8||k===11){if(x>cx-29&&x<cx+29&&y>cy-20&&y<cy+16)return true}
     else if(k===12){if(x>cx-25&&x<cx+27&&y>cy-14&&y<cy+10)return true}
+    else if(k===58){if(x>cx-17&&x<cx+17&&y>cy-30&&y<cy+8)return true}
     else if(k===13){if(x>cx-24&&x<cx+24&&y>cy-16&&y<cy+12)return true}
     else if(k>=16&&k<=19){if(x>cx-25&&x<cx+25&&y>cy-18&&y<cy+12)return true}
     else if(k===15){if(x>cx-25&&x<cx+25&&y>cy-18&&y<cy+10)return true}
@@ -2812,8 +2859,9 @@ function update(dt){
     else if(!fc&&!P.boat&&boatK>=0&&eq!=='canoa'){const k=boatK;ACT={v:'Embarcar',s:'canoa',go:()=>{dispatch({t:'boatOn',b:k});act.cd=.6}}}
     else if(!fc&&foe!=null){prey=foe;ACT=meleeAct(foe)}
     else if(!fc&&npcK>=0){const n=villagers[npcK];ACT={v:'Trocar',s:`${n.name} · ${n.role}`,go:()=>{openTrade(npcK);act.cd=.5}}}
-    else if(ist&&(fc||!(isLive(eq)||(eq==='vara'&&fishing)))){const m=ist.k===33?['Alavanca',levers.get(ist.i)!==false?'desligar':'ligar']:({41:['Colher',(CROPNAME[(crops.get(ist.i)||{}).sp]||'').toLowerCase()],13:['Composteira','abrir'],15:['Baú','abrir'],16:['Carvoaria','abrir'],17:['Caldeira','abrir'],5:['Fornalha','abrir'],8:['Serraria','abrir'],9:['Beber','do coletor'],11:['Viveiro','sementes de árvore'],6:['Dormir','até amanhecer'],47:['Covo','pegar peixes'],55:['Forno elétrico','pôr minério · pegar barras'],57:['Rádio','transmitir'],48:['Caixa de abelhas','colher mel'],51:['Cocho','pôr comida']})[ist.k];
-      const ii=ist.i,kk=ist.k;ACT={v:m[0],s:m[1],go:()=>{act.cd=1e9;focus=null;if(kk===5)openFurnace(ii);else if(kk===15)openChest(ii);else if(kk===8||kk===13||kk===16||kk===17)openMach(ii);else if(kk===41){dispatch({t:'reap',i:ii});act.cd=.4}else if(kk===9){dispatch({t:'tank',i:ii});act.cd=.6}else if(kk===11){dispatch({t:'plot',i:ii});act.cd=.6}else if(kk===47||kk===48){dispatch({t:'collect',i:ii});act.cd=.6}else if(kk===51){dispatch({t:'feed',i:ii});act.cd=.6}else if(kk===55){dispatch({t:'eforno',i:ii});act.cd=.6}else if(kk===57){dispatch({t:'radio',i:ii});act.cd=.6}else if(kk===33)dispatch({t:'lever',i:ii});else dispatch({t:'sleep',i:ii})}}}
+    else if(ist&&(fc||!(isLive(eq)||(eq==='vara'&&fishing)))){const m=ist.k===33?['Alavanca',levers.get(ist.i)!==false?'desligar':'ligar']:({41:['Colher',(CROPNAME[(crops.get(ist.i)||{}).sp]||'').toLowerCase()],13:['Composteira','abrir'],15:['Baú','abrir'],16:['Carvoaria','abrir'],17:['Caldeira','abrir'],5:['Fornalha','abrir'],8:['Serraria','abrir'],9:['Beber','do coletor'],11:['Viveiro','sementes de árvore'],12:['Soprar o fole','toque várias vezes'],58:['Girar manivela','toque ou segure · 8 de força'],6:['Dormir','até amanhecer'],47:['Covo','pegar peixes'],55:['Forno elétrico','pôr minério · pegar barras'],57:['Rádio','transmitir'],48:['Caixa de abelhas','colher mel'],51:['Cocho','pôr comida']})[ist.k];
+      const ii=ist.i,kk=ist.k,mm=mach.get(ii)||{};if(kk===8&&mm.in>0&&!(mm.pow>0)){ACT={v:'Serrar à mão',s:`${mm.in} madeira${mm.in>1?'s':''} · toque várias vezes`,go:()=>{addStat('energia',-.3);dispatch({t:'pump',i:ii});act.swing=1;act.cd=.3}};ACT2={v:'Serraria',s:'abrir',go:()=>{openMach(ii)}}}else
+      ACT={v:m[0],s:m[1],go:()=>{act.cd=1e9;focus=null;if(kk===12||kk===58){addStat('energia',-.25);dispatch({t:'pump',i:ii});act.cd=.28}else if(kk===5)openFurnace(ii);else if(kk===15)openChest(ii);else if(kk===8||kk===13||kk===16||kk===17)openMach(ii);else if(kk===41){dispatch({t:'reap',i:ii});act.cd=.4}else if(kk===9){dispatch({t:'tank',i:ii});act.cd=.6}else if(kk===11){dispatch({t:'plot',i:ii});act.cd=.6}else if(kk===47||kk===48){dispatch({t:'collect',i:ii});act.cd=.6}else if(kk===51){dispatch({t:'feed',i:ii});act.cd=.6}else if(kk===55){dispatch({t:'eforno',i:ii});act.cd=.6}else if(kk===57){dispatch({t:'radio',i:ii});act.cd=.6}else if(kk===33)dispatch({t:'lever',i:ii});else dispatch({t:'sleep',i:ii})}}}
     else if(tameK!=null){const a=animals[tameK],k=tameK;ACT={v:farmVerb(a.sp),s:`${a.prod*(SPEC[a.sp].farmN||1)} de ${ITEMS[SPEC[a.sp].farm].toLowerCase()}`,go:()=>{dispatch({t:'farmc',a:k});act.cd=.6}}}
     else if(eq){const T0=TOOLS[eq];
       if(feedK!=null){const a=animals[feedK],k=feedK,id=eq;ACT={v:'Oferecer',s:`${ITEMS[id].toLowerCase()} · ${a.trust||0}/${TRUSTN[a.sp]}`,go:()=>{dispatch({t:'offer',a:k,id});act.cd=.6}}}
@@ -3019,6 +3067,7 @@ function render(){
         else if(o.st===47)drawCovo(ctx,cx,cy,m.fish||0);
         else if(o.st===48){drawApiario(ctx,cx,cy,m.mel||0);if(DARK<.5&&rainI<.3)bees(ctx,cx,cy-30,5)}
         else if(o.st===51)drawCocho(ctx,cx,cy,m.food||0);
+        else if(o.st===58)drawManivela(ctx,cx,cy,m.ang||0);
         else drawCanteiro(ctx,cx,cy,m)}
       else drawStructAt(ctx,o.st,cx,cy,o.i,time)}
     else drawObj(o)}
@@ -3113,6 +3162,8 @@ const CARDS=[
   ['jatoba','Copa densa que domina a mata úmida. Dá madeira e fruto.'],
   ['buriti','Palmeira das veredas. Só nasce perto da água: fibra e fruto.'],
   ['pitanga','Arbusto com frutos vermelhos. Colhido, volta a dar fruto depois de um tempo.'],
+  ['cacau','Árvore baixa da sombra da mata. Os frutos nascem grudados no tronco. Com mel, vira chocolate na fogueira.'],
+  ['acai','Palmeira fina de vários troncos, na beira dos rios e do mangue. O cacho roxo dá energia; com mel vira tigela de açaí.'],
   ['helic','Folhas largas e brácteas vermelhas. Fibra para cordas.'],
   ['fern','Forra o chão da mata. Dá para atravessar.'],
   ['mandacaru','Cacto do cerrado seco. Guarda água para os dias quentes.'],
@@ -3331,10 +3382,10 @@ const GUIDE=[
   b:()=>`<p><b>Queixadas</b> atacam em bando. <b>Jacaré</b> e <b>sucuri</b> dão bote na beira da água. O <b>tamanduá</b> só revida se for atacado.</p><p>Roupa de couro reduz o dano. Se desmaiar, você acorda na cama.</p>`,
   trig:()=>hurtFlash>0||['queixada','jacare','sucuri','onca'].some(a=>disc.has('a_'+a)),urgent:1},
  {id:'metal',cat:'Indústria',icon:'barra_cobre',t:'Fornalha e metais',
-  b:()=>`<p>Minério de <b>cobre</b> (verde) e <b>ferro</b> (ferrugem) se quebram com a picareta. Construa a <b>fornalha</b>, ponha minério e madeira.</p><p>A primeira barra de cobre abre a <b>era do cobre</b>. O ferro precisa de um <b>fole</b> soprando ao lado da fornalha.</p>`,
+  b:()=>`<p>Minério de <b>cobre</b> (verde) e <b>ferro</b> (ferrugem) se quebram com a picareta. Construa a <b>fornalha</b>, ponha minério e madeira.</p><p>A primeira barra de cobre abre a <b>era do cobre</b>. O ferro precisa de um <b>fole</b> soprando ao lado da fornalha. Sem eixo, <b>toque no fole várias vezes</b> para soprar à mão. Com o fole soprando, qualquer minério derrete bem mais rápido.</p>`,
   trig:()=>disc.has('o_copper')||disc.has('o_iron')},
  {id:'forca',cat:'Indústria',icon:'p_roda',t:'Força mecânica',
-  b:()=>`<p>A <b>roda d'água</b> na margem gera força. <b>Eixos</b> levam em linha reta (Girar muda a direção), <b>engrenagens</b> fazem curvas e <b>alavancas</b> ligam e desligam.</p><p>Serraria, fole, bomba, esteiras e braços usam essa força.</p>`,
+  b:()=>`<p>A <b>roda d'água</b> na margem gera força. <b>Eixos</b> levam em linha reta (Girar muda a direção), <b>engrenagens</b> fazem curvas e <b>alavancas</b> ligam e desligam.</p><p>Serraria, fole, bomba, esteiras e braços usam essa força.</p><p>Sem roda d'água? A <b>manivela</b> dá 8 de força enquanto você gira (toque várias vezes ou segure). Encoste numa máquina ou ligue aos eixos. A serraria também dá para usar à mão.</p>`,
   trig:()=>eras.cobre},
  {id:'logistica',cat:'Indústria',icon:'p_esteira',t:'Esteiras, braços e baús',
   b:()=>`<p>A <b>esteira</b> leva itens na direção da seta. O <b>braço mecânico</b> pega do que está atrás e põe na frente.</p><p>Monte linhas: baú → braço → esteira → máquina → braço → baú.</p>`,
