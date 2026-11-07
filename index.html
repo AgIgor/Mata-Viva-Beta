@@ -383,7 +383,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(-
       <p>Tudo fica salvo neste navegador, sozinho, a cada poucos segundos.</p>
       <button class="btn" type="button" data-tback>Voltar</button>
     </div>
-    <p class="ttl-ver">Versão 1.23 · teste</p>
+    <p class="ttl-ver">Versão 1.24 · teste</p>
   </div>
 </div>
 <div id="pause" hidden role="dialog" aria-label="Pausa">
@@ -2389,6 +2389,13 @@ function pump(i){const k=blockG[i],m=mach.get(i);if(!m)return;const cx=(i%W+.5)*
   if(k===12){m.man=Math.min(1.8,(m.man||0)+.85);m.pow=1;for(let q=0;q<4;q++)parts.push({x:cx+18,y:cy-2,z:6,vx:40+Math.random()*30,vy:(Math.random()-.5)*14,vz:8,life:.45,c:'rgba(210,210,200,.7)',s:2.6,r:0});const f=[1,-1,W,-W].map(d=>i+d).find(q=>blockG[q]===5);if(f!=null)for(let q=0;q<3;q++)parts.push({x:(f%W+.5)*T+(Math.random()-.5)*16,y:(((f/W)|0)+.5)*T,z:26,vx:(Math.random()-.5)*20,vy:0,vz:40+Math.random()*30,life:.5,c:'#ffb040',s:2,r:0});play('rustle')}
   else if(k===58){m.cr=Math.min(1.8,(m.cr||0)+.85);m.ang=(m.ang||0)+.9;play('rustle')}
   else if(k===8&&m.in>0){m.prog=(m.prog||0)+.2;for(let q=0;q<5;q++)parts.push({x:cx+4,y:cy-2,z:24,vx:(Math.random()-.5)*60,vy:(Math.random()-.5)*20,vz:20+Math.random()*30,life:.6,c:'#e8cf9a',s:1.8,r:0});if(m.prog>=1){m.prog=0;m.in--;m.out+=2;floats.push({x:cx,y:cy-50,text:'+2 tábuas',life:1.3});if(maOpen===i)renderMach()}play('wood')}}
+const UPROOT=new Set(['fern','helic','guaco','boldo','quina','mandiocaW','milhoW','aboboraW','pitanga','mandacaru','stump','cacau','acai']);
+function uproot(i){const o=objAt[i];if(!o||!UPROOT.has(o.type)||!(inv.enxada>0))return;const t=TYPES[o.type];
+  if(o.type==='stump')give('madeira',1,o.x,o.y-30,0);else if(!o.picked)t.drops.forEach(([id,n],k)=>give(id,Math.max(1,Math.ceil(n/2)),o.x,o.y-30,k));
+  objAt[i]=null;changes[i]='x';planted.set(i,{t:null,cap:1});if(t.big)miniPixel(i);
+  for(let n=0;n<12;n++)parts.push({x:o.x+(Math.random()-.5)*24,y:o.y,z:4,vx:(Math.random()-.5)*70,vy:(Math.random()-.5)*20,vz:40+Math.random()*50,life:.6,c:n%3?'#6b4a2e':t.fx[0],s:2.2,r:0});
+  wear.enxada=wearOf('enxada')-1;if(wear.enxada<=0){inv.enxada--;if(!inv.enxada)delete inv.enxada;wear.enxada=TOOLS.enxada.max;floats.push({x:P.x,y:P.y-80,text:'A enxada quebrou',life:1.8})}
+  floats.push({x:o.x,y:o.y-56,text:'Arrancado pela raiz',life:1.5});play('plant');save();updateBar()}
 function regaOk(i){if(i<0)return false;const tx=i%W,ty=(i/W)|0;if(Math.hypot((tx+.5)*T-P.x,(ty+.5)*T-P.y)>3.3*T)return false;for(let j=-1;j<=1;j++)for(let k=-1;k<=1;k++){const c=crops.get((ty+j)*W+tx+k);if(c&&!c.ripe&&c.w<4)return true}return false}
 function rega(i){if(!(inv.balde_agua>0)||i<0)return;inv.balde_agua--;if(!inv.balde_agua)delete inv.balde_agua;inv.balde=(inv.balde||0)+1;const tx=i%W,ty=(i/W)|0;let n=0;
   for(let j=-1;j<=1;j++)for(let k=-1;k<=1;k++){const q=(ty+j)*W+tx+k,c=crops.get(q);if(c){c.w=Math.max(c.w,4);n++}for(let z=0;z<3;z++)parts.push({x:(tx+k+.5)*T+(Math.random()-.5)*30,y:(ty+j+.5)*T,z:14,vx:(Math.random()-.5)*30,vy:(Math.random()-.5)*14,vz:20+Math.random()*30,life:.5,c:'#bfe3f0',s:2,r:0})}
@@ -2404,7 +2411,7 @@ function stepRegrow(dt){const rf=rainI>.2?1.5:1;
   let wild=0;for(const[,e]of planted)if(e.t==='muda'&&e.nat)wild++;if(wild>=50)return;
   const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);
   for(let k=0;k<160;k++){const q=(ty+(Math.random()*36|0)-18)*W+tx+(Math.random()*36|0)-18;if(q<0||q>=W*H)continue;const o=objAt[q];if(!o||!SEEDOF[o.type]||Math.random()>.6)continue;
-    const an=Math.random()*TAU,dd=2+Math.random()*2.5,t2=Math.round(((q/W)|0)+Math.sin(an)*dd)*W+Math.round(q%W+Math.cos(an)*dd);if(!canSow(t2)||noGrow(t2))continue;
+    const an=Math.random()*TAU,dd=2+Math.random()*2.5,t2=Math.round(((q/W)|0)+Math.sin(an)*dd)*W+Math.round(q%W+Math.cos(an)*dd);if(!canSow(t2)||noGrow(t2)||(planted.get(t2)||{}).cap)continue;
     if(o.type==='buriti'&&!nearW[t2])continue;if(biome[t2]!==biome[q]&&!(biome[t2]>=2&&biome[t2]<=4))continue;
     let crowd=0;for(let j=-4;j<=4;j++)for(let m=-4;m<=4;m++){const r=objAt[t2+j*W+m];if(r&&r.type==='muda')crowd++}if(crowd>=2)continue;
     const to=o.type,x=(t2%W+.5)*T,y=(((t2/W)|0)+.5)*T+4;objAt[t2]={type:'muda',grow:to,g:0,v:0,x,y,ph:Math.random()*TAU,i:t2};planted.set(t2,{t:'muda',to,g:0,nat:1});break}
@@ -2515,7 +2522,7 @@ function doTrade(v,side,k){const n=villagers[v];if(!n)return;const d=n.def,o=(si
   vstate.u[`${d.id}:${side}:${k}`]=(vstate.u[`${d.id}:${side}:${k}`]||0)+1;stats.trades++;play('get');save();updateBar();renderTrade()}
 /* ---------- multiplayer: live room (claude.ai) with same-browser fallback ---------- */
 const MPCOL=[['#5f6e3b','#9fbf5e','#434f29'],['#3b5f8a','#6fa0dc','#2a4566'],['#8a3b3b','#e07a6a','#662a2a'],['#7a5aa0','#b896e0','#5a3e7a'],['#3b8a7a','#6fd4be','#2a6658'],['#a0782a','#f2c230','#7a5a18']];
-const REPL=new Set(['pump','rega','eforno','radio','hit','build','unbuild','fu','ma','reap','plot','lever','release','collect','feed','sow','douse','dig','ch']);
+const REPL=new Set(['uproot','pump','rega','eforno','radio','hit','build','unbuild','fu','ma','reap','plot','lever','release','collect','feed','sow','douse','dig','ch']);
 const DIR4=['down','up','left','right'],MPCH=1900;
 const mp={uid:Math.random().toString(36).slice(2,10),joining:false,on:false,host:false,room:null,src:'',code:'',ready:false,seq:0,out:[],seen:new Map(),snap:null,sentIds:new Set(),parts:{},hostPeer:null,t:0,ct:0,myC:0,prevSeed:null,unsub:null,lastRx:new Map()};
 const others=new Map(),mpEl=document.getElementById('mpPanel');
@@ -2682,6 +2689,7 @@ function applyCmd(cmd){
   else if(cmd.t==='fill')fill(cmd.c);
   else if(cmd.t==='rega')rega(cmd.i);
   else if(cmd.t==='pump')pump(cmd.i);
+  else if(cmd.t==='uproot')uproot(cmd.i);
   else if(cmd.t==='shoot')shoot(cmd.a);
   else if(cmd.t==='melee')melee(cmd.a);
   else if(cmd.t==='equip')setEquip(cmd.id);
@@ -2876,6 +2884,7 @@ function update(dt){
     else if(eq){const T0=TOOLS[eq];
       if(feedK!=null){const a=animals[feedK],k=feedK,id=eq;ACT={v:'Oferecer',s:`${ITEMS[id].toLowerCase()} · ${a.trust||0}/${TRUSTN[a.sp]}`,go:()=>{dispatch({t:'offer',a:k,id});act.cd=.6}}}
       else if(T0&&(T0.fam==='machado'||T0.fam==='picareta')&&target)ACT=hitAct(target,eq);
+      else if(eq==='enxada'&&target&&UPROOT.has(target.type)){const ti=target.i;ACT={v:target.type==='stump'?'Arrancar toco':'Arrancar',s:'não nasce mais nada aqui',go:()=>{dispatch({t:'uproot',i:ti});act.swing=1;act.tool='enxada';act.cd=.6}}}
       else if(eq==='enxada'&&target&&target.type==='muda'){const ti=target.i;ACT={v:'Transplantar',s:'leva a muda na mochila',go:()=>{dispatch({t:'dig',i:ti});act.swing=1;act.tool='enxada';act.cd=.6}}}
       else if(eq==='enxada')farm(40,'Arar',`enxada · ${wearOf('enxada')} usos`,'enxada');
       else if(SEEDK[eq])farm(SEEDK[eq],'Plantar',CROPNAME[CROPK[SEEDK[eq]]].toLowerCase());
@@ -3377,7 +3386,7 @@ const GUIDE=[
   b:()=>`<p>Há uma vila no mapa, perto de um rio. A partir do segundo dia, um marcador mostra onde fica a fumaça da fogueira dela.</p><ul><li>Fale com os moradores nas barracas: <b>Benedita</b> (comida e sementes), <b>Tião</b> (ferreiro), <b>Zé</b> (pescador) e <b>Flor</b> (raizeira).</li><li>Venda o que sobra para ganhar <b>moedas de cobre</b> e compre o que falta.</li><li>Cada oferta tem estoque, que renova a cada amanhecer.</li></ul>`,
   trig:()=>!!stats.vila},
  {id:'plantas',cat:'Sítio',icon:'folhas',t:'Como as plantas voltam',
-  b:()=>`<ul><li><b>Tocos rebrotam</b>: deixe a raiz e em ~6 min nasce uma muda, que vira árvore em mais alguns minutos. Arrancar o toco acaba com a árvore.</li><li><b>Samambaia, helicônia, ervas, mandacaru e roças silvestres</b> voltam sozinhas no mesmo lugar depois de alguns minutos.</li><li><b>Pitangueira e colmeia</b> refazem frutos e mel.</li><li><b>Árvores espalham mudas</b> em volta. Com a enxada na mão você pode <b>transplantar</b> uma muda para a mochila e plantar onde quiser.</li><li>Pedras, minérios e ossadas não voltam: são finitos.</li></ul><p>A chuva acelera tudo.</p>`,
+  b:()=>`<ul><li><b>Tocos rebrotam</b>: deixe a raiz e em ~6 min nasce uma muda, que vira árvore em mais alguns minutos. Arrancar o toco acaba com a árvore.</li><li><b>Samambaia, helicônia, ervas, mandacaru e roças silvestres</b> voltam sozinhas no mesmo lugar depois de alguns minutos.</li><li>Não quer que volte? Segure a <b>enxada</b> e use <b>Arrancar</b> numa planta ou toco: sai pela raiz e nada mais nasce sozinho naquele lugar. Para uma área grande, use o <b>marco de capina</b>.</li><li><b>Pitangueira e colmeia</b> refazem frutos e mel.</li><li><b>Árvores espalham mudas</b> em volta. Com a enxada na mão você pode <b>transplantar</b> uma muda para a mochila e plantar onde quiser.</li><li>Pedras, minérios e ossadas não voltam: são finitos.</li></ul><p>A chuva acelera tudo.</p>`,
   trig:()=>[...planted.values()].some(e=>e.t==='stump'&&e.g>.1)},
  {id:'mudas',cat:'Sítio',icon:'semente_ipe',t:'Sementes raras e mudas',
   b:()=>`<p>Araras e tucanos derrubam sementes que ficam brilhando no chão. Basta passar por cima. Cortar árvores às vezes também dá a semente.</p><p>O <b>viveiro de mudas</b> (era do cobre) multiplica a semente que você puser nele: cerca de uma nova por dia, até 4.</p><p>Segure a semente e use <b>Plantar muda</b> num chão livre. Pitangueira cresce em ~2,5 min; ipê, jatobá e buriti em ~5 min. A chuva acelera.</p>`,
