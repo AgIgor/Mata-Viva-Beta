@@ -1,13 +1,4 @@
-<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b120e">
-<style>html,body{margin:0;padding:0}</style>
-</head>
-<body>
-<title>Mata Viva</title>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b120e"><style>html,body{margin:0;padding:0}</style></head><body><title>Mata Viva</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&display=swap">
@@ -966,7 +957,7 @@ const PIECES=[
   {k:12,id:'fole',era:'cobre',name:'Fole',cost:[['madeira',4],['fibra',4],['barra_cobre',1]],desc:'Ao lado da fornalha, sopra ar para ela derreter ferro. Usa 4 de força.'},
   {k:9,id:'coletor',era:'cobre',name:'Coletor de chuva',cost:[['tabua',4],['fibra',2]],desc:'Junta até 100 litros quando chove. Dá para beber dele e mandar a água por canos.'},
   {k:31,id:'cano',era:'cobre',name:'Cano de madeira',cost:[['cano',1]],desc:'Leva a água do coletor até o canteiro. Coloque um ao lado do outro.'},
-  {k:11,id:'canteiro',era:'cobre',name:'Canteiro de mandioca',cost:[['tabua',3],['folhas',4]],desc:'Molhado pela chuva ou por cano, produz 3 mandiocas por minuto, até 9.'},
+  {k:11,id:'canteiro',era:'cobre',name:'Viveiro de mudas',cost:[['tabua',3],['terra',2]],desc:'Ponha uma semente de árvore. Com água (chuva, cano, rio perto ou irrigador) ele produz mais sementes dela: cerca de 1 por dia, até 4.'},
   {k:47,id:'covo',era:'pedra',grp:'sitio',name:'Covo de pesca',cost:[['fibra',6],['madeira',2]],desc:'Cesto-armadilha na beira da água. Pega até 3 peixes sozinho, mais rápido na chuva.'},
   {k:48,id:'apiario',era:'pedra',grp:'sitio',name:'Caixa de abelhas',cost:[['madeira',4],['cera',2]],desc:'Abelhas jataí, sem ferrão. Fazem até 5 potes de mel; mais rápido com flores e plantações por perto.'},
   {k:49,id:'cerca',era:'pedra',grp:'sitio',name:'Cerca',cost:[['madeira',1]],desc:'Segura os animais de criação. Se liga sozinha às cercas vizinhas.'},
@@ -1123,7 +1114,7 @@ function drawStructAt(x,k,cx,cy,i,t){
   else if(k===7)drawRoda(x,cx,cy,t);
   else if(k===8)drawSerraria(x,cx,cy,t,false);
   else if(k===9)drawColetor(x,cx,cy,40);
-  else if(k===11)drawCanteiro(x,cx,cy,{g:.6,ripe:0,wet:true});
+  else if(k===11)drawCanteiro(x,cx,cy,{seed:'semente_ipe',g:.6,n:2,wet:true});
   else if(k===12)drawFole(x,cx,cy,t,true);
   else if(k===13)drawCompost(x,cx,cy,{folhas:3,terra:1,sobras:1},t);
   else if(k===15)drawChest(x,cx,cy);
@@ -1206,7 +1197,17 @@ function drawColetor(x,cx,cy,w){
   if(w>1){const f=Math.min(1,.35+w/150);x.globalAlpha=.35+.6*Math.min(1,w/100);E2(x,cx,top+.5,11*f,3.4*f,'#5fb4d0');x.globalAlpha=1}
   x.fillStyle='#5e9a40';for(const sd of[-1,1]){x.beginPath();x.moveTo(cx+sd*9,top-1);x.quadraticCurveTo(cx+sd*22,top-11,cx+sd*25,top-4);x.quadraticCurveTo(cx+sd*18,top+1,cx+sd*9,top+1);x.fill()}
 }
+const VCOL={semente_ipe:['#f0bf2e','#be78d2'],semente_jatoba:['#4f7a36','#4f7a36'],semente_pitanga:['#d0302a','#d0302a'],semente_buriti:['#6aa84a','#6aa84a']};
 function drawCanteiro(x,cx,cy,m){
+  if(!(m.ripe>0)){const g=m.g||0,wet=m.wet!==false,n=m.n||0;
+    R2(x,cx-22,cy-16,44,28,3,'#7a5232');R2(x,cx-19,cy-13,38,22,2,wet?'#4a3220':'#7a5d3e');R2(x,cx-22,cy+9,44,4,1,'#5c3f27');
+    if(!m.seed){for(const px of[-10,4])E2(x,cx+px,cy-2,3,1.6,'rgba(30,20,10,.5)');return}
+    const col=VCOL[m.seed]||['#5e9a40','#5e9a40'];
+    for(let k=0;k<4;k++){const bx=cx-14+k*9.5,by=cy-1+(k%2)*3,ready=k<n,h=ready?15:k===n?4+g*9:3;if(!ready&&k>n)continue;
+      x.strokeStyle='#6b4a2a';x.lineWidth=1.5;x.beginPath();x.moveTo(bx,by);x.lineTo(bx,by-h);x.stroke();
+      for(let q=0;q<(ready?5:3);q++){x.save();x.translate(bx,by-h);x.rotate(-Math.PI/2+(q-2)*.6);x.fillStyle=q%2?(wet?'#7cc062':'#a3a04a'):'#4f8a36';x.beginPath();x.ellipse(3.5,0,3.6,1.5,0,0,TAU);x.fill();x.restore()}
+      if(ready)C2(x,bx,by-h-1,2,col[k%2])}
+    return}
   const g=m.g||0,wet=m.wet!==false;
   R2(x,cx-22,cy-16,44,28,3,'#7a5232');R2(x,cx-19,cy-13,38,22,2,wet?'#4a3220':'#7a5d3e');
   x.strokeStyle=wet?'rgba(20,12,6,.5)':'rgba(60,40,20,.4)';x.lineWidth=1;for(let k=0;k<3;k++){x.beginPath();x.moveTo(cx-17,cy-8+k*7);x.lineTo(cx+17,cy-8+k*7);x.stroke()}
@@ -1247,7 +1248,7 @@ function buildPieceIcons(){
     else if(p.k===35){x.translate(24,32);x.scale(1.2,1.2);drawArm(x,0,0,0,.5,null)}
     else if(p.k===13){x.translate(24,38);x.scale(.95,.95);drawCompost(x,0,0,{folhas:3,terra:1,sobras:1,adubo:2},.5)}
     else if(p.k===12){x.translate(24,34);x.scale(1.05,1.05);drawFole(x,0,0,0,true)}
-    else if(p.k===11){x.translate(24,30);x.scale(.8,.8);drawCanteiro(x,0,0,{g:.8,ripe:3,wet:true})}
+    else if(p.k===11){x.translate(24,30);x.scale(.8,.8);drawCanteiro(x,0,0,{seed:'semente_ipe',g:.6,n:3,wet:true})}
     else if(p.k===10){x.translate(6,6);x.scale(.75,.75);x.drawImage(FLOOR[0].c,0,0,48,48);x.fillStyle='#5c3f27';x.fillRect(0,48,48,4)}
     else if(p.k===54||p.k===57){x.translate(24,46);x.scale(.4,.4);drawStructAt(x,p.k,0,0,-1,0)}
     else if(p.k>=47&&p.k<=56){x.translate(24,38);x.scale(.82,.82);drawStructAt(x,p.k,0,0,-1,0)}
@@ -1391,14 +1392,14 @@ function canSleep(){const h=hours();return h>=18.5||h<5.5}
 function lightLevel(){const h=hours();if(h<5)return 0;if(h<7)return(h-5)/2;if(h<17.5)return 1;if(h<19.5)return 1-(h-17.5)/2;return 0}
 const MECH=1|4|8|16;let levers=new Map(),needMig=false;
 let soilG=new Uint8Array(W*H),crops=new Map();
-const GROW={mandioca:150,milho:90,abobora:120},CROPK={41:'mandioca',42:'milho',43:'abobora'},CROPNAME={mandioca:'Mandioca',milho:'Milho',abobora:'Abóbora'},SEED={mandioca:'rama_mandioca',milho:'semente_milho',abobora:'semente_abobora'};
-const YIELD={mandioca:[['mandioca',3],['rama_mandioca',2]],milho:[['milho',3],['semente_milho',2]],abobora:[['abobora',2],['semente_abobora',2]]};
+const GROW={mandioca:1280,milho:640,abobora:860},CROPK={41:'mandioca',42:'milho',43:'abobora'},CROPNAME={mandioca:'Mandioca',milho:'Milho',abobora:'Abóbora'},SEED={mandioca:'rama_mandioca',milho:'semente_milho',abobora:'semente_abobora'};
+const YIELD={mandioca:[['mandioca',5],['rama_mandioca',2]],milho:[['milho',4],['semente_milho',2]],abobora:[['abobora',3],['semente_abobora',2]]};
 let netG=new Uint8Array(W*H),mach=new Map(),netDirty=true,pNet=null,wNet=null,pNets=[],wNets=[],eNet=null,eNets=[];
 const isElecK=k=>k===52||k===54||k===55||k===56||k===57;
 const isPowK=k=>k===52||k===7||k===8||k===12||k===34||k===35||k===18||k===19,isWatK=k=>k===9||k===11||k===17||k===19,isMachK=k=>(k>=52&&k<=57&&k!==53)||k===47||k===48||k===51||k===7||k===8||k===9||k===11||k===12||k===13||k===15||k===34||k===35||(k>=16&&k<=19);
 const DV=[[1,0],[0,1],[-1,0],[0,-1]],dOff=d=>DV[d][0]+DV[d][1]*W;
 function exposes(i,d){const b=netG[i];if(isPowK(blockG[i])||b&8)return true;if(b&16)return levers.get(i)!==false;if(b&1)return d<2;if(b&4)return d>=2;return false}
-const newMach=k=>k===52?{pow:0}:k===54?{e:0}:k===55?{ore:'',n:0,out:{},prog:0,e:0}:k===56?{e:0}:k===57?{e:0,on:0,tx:0,done:0}:k===47?{fish:0,t:0}:k===48?{mel:0,p:0}:k===51?{food:0}:k===16?{in:0,out:0,prog:0}:k===17?{water:0,fuel:0,carv:0,wood:0,heat:0}:k===18?{on:0,ph:0}:k===19?{pow:0}:k===15?{items:{}}:k===34?{d:0,items:[],pow:0}:k===35?{d:0,hold:null,t:0,pow:0}:k===13?{folhas:0,terra:0,sobras:0,adubo:0,prog:0}:k===12?{pow:0}:k===8?{in:0,out:0,prog:0,pow:0}:k===9?{w:0}:k===11?{g:0,ripe:0,wet:false}:{};
+const newMach=k=>k===52?{pow:0}:k===54?{e:0}:k===55?{ore:'',n:0,out:{},prog:0,e:0}:k===56?{e:0}:k===57?{e:0,on:0,tx:0,done:0}:k===47?{fish:0,t:0}:k===48?{mel:0,p:0}:k===51?{food:0}:k===16?{in:0,out:0,prog:0}:k===17?{water:0,fuel:0,carv:0,wood:0,heat:0}:k===18?{on:0,ph:0}:k===19?{pow:0}:k===15?{items:{}}:k===34?{d:0,items:[],pow:0}:k===35?{d:0,hold:null,t:0,pow:0}:k===13?{folhas:0,terra:0,sobras:0,adubo:0,prog:0}:k===12?{pow:0}:k===8?{in:0,out:0,prog:0,pow:0}:k===9?{w:0}:k===11?{seed:'',n:0,g:0,wet:false}:{};
 function rebuildNets(){
   netDirty=false;pNet=new Int32Array(W*H).fill(-1);wNet=new Int32Array(W*H).fill(-1);eNet=new Int32Array(W*H).fill(-1);pNets=[];wNets=[];eNets=[];const eOk=n=>(netG[n]&32)||isElecK(blockG[n]);
   const pOk=n=>(netG[n]&MECH)||isPowK(blockG[n]),wOk=n=>(netG[n]&2)||isWatK(blockG[n]),DIRS=[[1,0,1],[-1,1,0],[W,2,3],[-W,3,2]];
@@ -1414,13 +1415,14 @@ function accepts(i,id){if(i<0||i>=W*H)return false;const k=blockG[i],m=mach.get(
   if(k===16)return id==='madeira'&&m.in<30;
   if(k===17)return(id==='carvao'&&m.carv<20)||(id==='madeira'&&m.wood<20);
   if(k===51)return COCHO.includes(id);
+  if(k===11)return!!m&&!!SAPL[id]&&!m.seed;
   if(k===55)return!!m&&(id==='ferro'||id==='cobre')&&(!m.ore||m.ore===id)&&m.n<20;
   if(k===13)return id==='folhas'||id==='terra'||id==='sobras';
   if(k===5){const f=furn.get(i);if(!f)return false;if(id==='madeira')return f.wood<20;if(id==='carvao')return(f.coal||0)<20;return(id==='ferro'||id==='cobre')&&(!f.ore||f.ore===id)&&f.n<20}
   if(k===34)return!!m&&m.items.length<3&&(!m.items.length||m.items[0].p>.34);
   return false}
 function putInto(i,id){const k=blockG[i],m=mach.get(i);
-  if(k===15)m.items[id]=(m.items[id]||0)+1;else if(k===8)m.in++;else if(k===13)m[id]++;else if(k===51)m.food=(m.food||0)+1;else if(k===55){m.ore=id;m.n++}
+  if(k===15)m.items[id]=(m.items[id]||0)+1;else if(k===8)m.in++;else if(k===13)m[id]++;else if(k===51)m.food=(m.food||0)+1;else if(k===11){m.seed=id;m.n=0;m.g=0;delete m.ripe}else if(k===55){m.ore=id;m.n++}
   else if(k===5){const f=furn.get(i);if(id==='madeira')f.wood++;else if(id==='carvao')f.coal=(f.coal||0)+1;else{f.ore=id;f.n++}}
   else if(k===16)m.in++;else if(k===17){if(id==='carvao')m.carv++;else m.wood++}
   else if(k===34)m.items.unshift({id,p:0});
@@ -1432,7 +1434,7 @@ function takeFrom(i,want){if(i<0||i>=W*H)return null;const k=blockG[i],m=mach.ge
   else if(k===13&&m&&m.adubo>0&&want('adubo')){m.adubo--;r='adubo'}
   else if(k===55&&m){for(const b in m.out)if(m.out[b]>0&&want(b)){m.out[b]--;r=b;break}}
   else if(k===47&&m&&m.fish>0&&want('peixe_cru')){m.fish--;r='peixe_cru'}else if(k===48&&m&&m.mel>0&&want('mel')){m.mel--;r='mel'}
-  else if(k===11&&m&&m.ripe>0&&want('mandioca')){m.ripe--;r='mandioca'}
+  else if(k===11&&m&&m.seed&&m.n>0&&want(m.seed)){m.n--;r=m.seed}
   else if(k===5){const f=furn.get(i);if(f)for(const b in f.out)if(f.out[b]>0&&want(b)){f.out[b]--;r=b;break}}
   else if(k===34&&m&&m.items.length){const it=m.items[m.items.length-1];if(it.p>.5&&want(it.id)){m.items.pop();r=it.id}}
   if(r){if(maOpen===i)renderMach();if(fuOpen===i)renderFurnace();if(chOpen===i)renderChest()}return r}
@@ -1463,8 +1465,8 @@ function stepMachines(dt){
     else if(k===18){let b=null;for(const d of[1,-1,W,-W]){if(blockG[i+d]===17){const q=mach.get(i+d);if(q&&q.heat>.6&&q.water>1){b=q;break}}}m.on=b?1:0;if(b)b.water=Math.max(0,b.water-dt*.8);if(m.on)m.ph+=dt*4}
     else if(k===13){if(m.folhas>=3&&m.terra>=1&&m.sobras>=1){m.prog+=dt/60;if(m.prog>=1){m.prog=0;m.folhas-=3;m.terra--;m.sobras--;m.adubo+=2;if(maOpen===i)renderMach()}}else m.prog=0}
     else if(k===9){if(rainI>.15&&!roofG[i])m.w=Math.min(100,m.w+dt*2.5*rainI)}
-    else if(k===11){let wet=rainI>.2&&!roofG[i];if(!wet){const n=wNets[wNet[i]];if(n&&n.pool>0){wet=true;takeWater(n,dt*.25)}}
-      m.wet=wet;if(wet&&m.ripe<9){m.g+=dt/60;if(m.g>=1){m.g=0;m.ripe=Math.min(9,m.ripe+3)}}}}
+    else if(k===11){let wet=(rainI>.2&&!roofG[i])||!!nearW[i]||(m.irr&&time-m.irr<1.5);if(!wet){const n=wNets[wNet[i]];if(n&&n.pool>0){wet=true;takeWater(n,dt*.05)}}
+      m.wet=wet;if(m.seed&&wet&&(m.n||0)<4){m.g=(m.g||0)+dt/(DAYLEN*.8);if(m.g>=1){m.g=0;m.n=(m.n||0)+1}}}}
 }
 const poolAt=i=>{const n=wNets[wNet&&wNet[i]];return n?n.pool:0};
 function pipeWater(i){for(const d of[1,-1,W,-W]){const q=i+d;if(netG[q]&2&&wNet){const n=wNets[wNet[q]];if(n&&n.pool>0)return n}}return null}
@@ -1472,7 +1474,7 @@ function soilWet(i){return(rainI>.2&&!roofG[i])||!!nearW[i]||!!pipeWater(i)}
 function stepFarms(dt){
   for(const[i,c]of crops){
     if((rainI>.2&&!roofG[i])||nearW[i])c.w=1;else{const n=pipeWater(i);if(n){c.w=1;takeWater(n,dt*.05)}else c.w=Math.max(0,c.w-dt/150)}
-    if(!c.ripe&&c.w>0){c.g+=dt/GROW[c.sp]*(c.f===2?3:c.f?2:1)*(c.ir&&time-c.ir<1.5?1.5:1);if(c.g>=1){c.g=1;c.ripe=true;c.f=false}}}
+    if(!c.ripe&&c.w>0){c.g+=dt/GROW[c.sp]*(c.f===2?2.2:c.f?1.6:1)*(c.ir&&time-c.ir<1.5?1.3:1);if(c.g>=1){c.g=1;c.ripe=true;c.f=false}}}
 }
 function cropStatus(c){return c.ripe?'Pronto para colher':c.w<=0?'Seco · precisa de chuva, rio ou cano':`Crescendo ${Math.round(c.g*100)}%${c.f===2?' · farinha de osso':c.f?' · adubado':''}`}
 function machStatus(i){const k=blockG[i],m=mach.get(i)||{};
@@ -1493,7 +1495,7 @@ function machStatus(i){const k=blockG[i],m=mach.get(i)||{};
   if(k===12){const nf=[1,-1,W,-W].some(d=>blockG[i+d]===5);return m.pow>0?(nf?'Soprando a fornalha':'Girando · coloque ao lado da fornalha'):'Parado · sem força no eixo'}
   if(k===8)return m.pow>0?(m.in?`Serrando · ${m.in} madeira na fila`:'Ligada · coloque madeira'):'Sem força · ligue com eixo';
   if(k===9)return`${Math.round(m.w||0)} de 100 litros${rainI>.15&&!roofG[i]?' · enchendo':''}`;
-  if(k===11)return m.ripe?`${m.ripe} mandiocas prontas`:m.wet?`Crescendo ${Math.round(m.g*100)}%`:'Sem água · chuva ou cano';
+  if(k===11)return m.ripe?`${m.ripe} mandiocas para colher`:!m.seed?'Vazio · ponha uma semente de árvore':`${ITEMS[m.seed]} · ${m.n||0}/4 prontas${(m.n||0)>=4?'':m.wet?` · ${Math.round((m.g||0)*100)}%`:' · sem água'}`;
   return''}
 const newFurn=()=>({ore:null,n:0,fuel:0,wood:0,out:{},prog:0});
 function folePow(i){let p=0;for(const d of[1,-1,W,-W])if(blockG[i+d]===12){const m=mach.get(i+d);if(m)p=Math.max(p,m.pow||0)}return p}
@@ -1630,7 +1632,7 @@ function thingAt(sx,sy){const wx=(sx-vw/2)/zoom+cam.x,wy=(sy-vh/2)/zoom+cam.y;
   for(let j=0;j<=3;j++)for(let i=-1;i<=1;i++){const q=(ty+j)*W+tx+i;if(q<0||q>=W*H)continue;const o=objAt[q];if(!o||o.burnt>time||TYPES[o.type].fixed||o.picked)continue;const v=SP[o.type]&&SP[o.type][o.v];if(!v)continue;
     const hw=Math.max(18,(v.sh?v.sh.rx:20)*.9);if(wx>o.x-hw&&wx<o.x+hw&&wy>o.y+v.top&&wy<o.y+8)cand('obj',o,o.x,o.y,Math.abs(wx-o.x)*.5+Math.max(0,wy-o.y)+20)}
   return best}
-function interactK(q){const k=blockG[q];if(k===5||k===8||k===13||k===15||k===16||k===17||k===51||k===55||k===57)return k;if(k===6&&canSleep())return k;if(k===9&&poolAt(q)>=10)return k;const m=mach.get(q)||{};if(k===11&&m.ripe>0)return k;if(k===47&&m.fish>0)return k;if(k===48&&m.mel>0)return k;return 0}
+function interactK(q){const k=blockG[q];if(k===5||k===8||k===13||k===15||k===16||k===17||k===51||k===55||k===57)return k;if(k===6&&canSleep())return k;if(k===9&&poolAt(q)>=10)return k;const m=mach.get(q)||{};if(k===11)return k;if(k===47&&m.fish>0)return k;if(k===48&&m.mel>0)return k;return 0}
 function tapAt(sx,sy){if(bmode||fainted)return false;const th=thingAt(sx,sy);if(!th)return false;const reach=th.kind==='npc'?4*T:th.kind==='animal'?2.2*T:2.9*T;
   if(Math.hypot(th.bx-P.x,th.by-P.y)>reach){floats.push({x:th.bx,y:th.by-60,text:'Chegue mais perto',life:1.2});return true}
   const dx=th.bx-P.x,dy=th.by-P.y;if(Math.abs(dx)>Math.abs(dy))P.dir=dx>0?'right':'left';else P.dir=dy>0?'down':'up';
@@ -1933,7 +1935,7 @@ function furnOp(i,op,id,n){
 function findInteract(){let best=null;const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);
   for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){const q=(ty+j)*W+tx+i;if(q<0||q>=W*H)continue;const cr=crops.get(q);if(cr&&cr.ripe){const d=Math.hypot((tx+i+.5)*T-P.x,(ty+j+.5)*T-P.y);if(d<70&&(!best||d<best.d))best={i:q,k:41,d};continue}
     const lv=netG[q]&16;if(lv){const d=Math.hypot((tx+i+.5)*T-P.x,(ty+j+.5)*T-P.y);if(d<70&&(!best||d<best.d))best={i:q,k:33,d};continue}
-    const k=blockG[q];if(!(k===5||k===8||k===13||k===15||k===16||k===17||(k===6&&canSleep())||(k===9&&poolAt(q)>=10)||(k===11&&(mach.get(q)||{}).ripe>0)||(k===47&&(mach.get(q)||{}).fish>0)||(k===48&&(mach.get(q)||{}).mel>0)||k===51||k===55||k===57))continue;
+    const k=blockG[q];if(!(k===5||k===8||k===13||k===15||k===16||k===17||(k===6&&canSleep())||(k===9&&poolAt(q)>=10)||k===11||(k===47&&(mach.get(q)||{}).fish>0)||(k===48&&(mach.get(q)||{}).mel>0)||k===51||k===55||k===57))continue;
     const d=Math.hypot((tx+i+.5)*T-P.x,(ty+j+.5)*T-P.y);if(d<70&&(!best||d<best.d))best={i:q,k,d}}return best}
 /* ---------- sawmill panel ---------- */
 let maOpen=-1;const maEl=document.getElementById('mach'),maBody=document.getElementById('maBody');
@@ -1977,7 +1979,9 @@ function dumpMach(i){const m=mach.get(i);if(!m)return;const cx=(i%W+.5)*T,cy=((i
 function reap(i){const c=crops.get(i);if(!c||!c.ripe)return;stats.harvest++;const cx=(i%W+.5)*T,cy=((i/W)|0)*T;YIELD[c.sp].forEach(([id,n],j)=>give(id,n,cx,cy,j));crops.delete(i);
   for(let n=0;n<10;n++)parts.push({x:cx+(Math.random()-.5)*30,y:cy+30,z:8,vx:(Math.random()-.5)*50,vy:(Math.random()-.5)*20,vz:40+Math.random()*50,life:.6,c:n%2?'#5e9a40':'#e2a53a',s:2.2,r:0});play('get');save();updateBar()}
 function drinkTank(i){const n=wNets[wNet[i]];if(!n||n.pool<10)return;takeWater(n,10);addStat('sede',25);floats.push({x:P.x,y:P.y-72,text:'+25 sede',life:1.2});play('drink')}
-function harvestPlot(i){const m=mach.get(i);if(!m||!m.ripe)return;const cx=(i%W+.5)*T,cy=(((i/W)|0)+.5)*T;give('mandioca',m.ripe,cx,cy-50,0);m.ripe=0;
+function harvestPlot(i){const m=mach.get(i);if(!m)return;const cx=(i%W+.5)*T,cy=(((i/W)|0)+.5)*T;
+  if(!m.ripe){if(m.seed&&m.n>0){give(m.seed,m.n,cx,cy-50,0);m.n=0}else if(!m.seed){const eq=equipped(),id=SAPL[eq]?eq:Object.keys(SAPL).find(k=>inv[k]>0);if(!id){floats.push({x:cx,y:cy-50,text:'Precisa de uma semente de árvore',life:1.8});return}inv[id]--;if(!inv[id])delete inv[id];m.seed=id;m.n=0;m.g=0;floats.push({x:cx,y:cy-50,text:`${ITEMS[id]} no viveiro`,life:1.6})}else{floats.push({x:cx,y:cy-50,text:machStatus(i),life:1.8});return}play('plant');save();updateBar();return}
+  give('mandioca',m.ripe,cx,cy-50,0);m.ripe=0;delete m.ripe;
   for(let n=0;n<10;n++)parts.push({x:cx+(Math.random()-.5)*36,y:cy,z:6,vx:(Math.random()-.5)*50,vy:(Math.random()-.5)*20,vz:40+Math.random()*50,life:.6,c:n%2?'#8a5a32':'#5e9a40',s:2.2,r:0});
   play('get');save();updateBar()}
 /* ---------- fauna ---------- */
@@ -2714,7 +2718,7 @@ function update(dt){
     else if(!fc&&!P.boat&&boatK>=0&&eq!=='canoa'){const k=boatK;ACT={v:'Embarcar',s:'canoa',go:()=>{dispatch({t:'boatOn',b:k});act.cd=.6}}}
     else if(!fc&&foe!=null){prey=foe;ACT=meleeAct(foe)}
     else if(!fc&&npcK>=0){const n=villagers[npcK];ACT={v:'Trocar',s:`${n.name} · ${n.role}`,go:()=>{openTrade(npcK);act.cd=.5}}}
-    else if(ist&&(fc||!(eq==='galinha_viva'||eq==='cabra_viva'||(eq==='vara'&&fishing)))){const m=ist.k===33?['Alavanca',levers.get(ist.i)!==false?'desligar':'ligar']:({41:['Colher',(CROPNAME[(crops.get(ist.i)||{}).sp]||'').toLowerCase()],13:['Composteira','abrir'],15:['Baú','abrir'],16:['Carvoaria','abrir'],17:['Caldeira','abrir'],5:['Fornalha','abrir'],8:['Serraria','abrir'],9:['Beber','do coletor'],11:['Colher','mandioca'],6:['Dormir','até amanhecer'],47:['Covo','pegar peixes'],55:['Forno elétrico','pôr minério · pegar barras'],57:['Rádio','transmitir'],48:['Caixa de abelhas','colher mel'],51:['Cocho','pôr comida']})[ist.k];
+    else if(ist&&(fc||!(eq==='galinha_viva'||eq==='cabra_viva'||(eq==='vara'&&fishing)))){const m=ist.k===33?['Alavanca',levers.get(ist.i)!==false?'desligar':'ligar']:({41:['Colher',(CROPNAME[(crops.get(ist.i)||{}).sp]||'').toLowerCase()],13:['Composteira','abrir'],15:['Baú','abrir'],16:['Carvoaria','abrir'],17:['Caldeira','abrir'],5:['Fornalha','abrir'],8:['Serraria','abrir'],9:['Beber','do coletor'],11:['Viveiro','sementes de árvore'],6:['Dormir','até amanhecer'],47:['Covo','pegar peixes'],55:['Forno elétrico','pôr minério · pegar barras'],57:['Rádio','transmitir'],48:['Caixa de abelhas','colher mel'],51:['Cocho','pôr comida']})[ist.k];
       const ii=ist.i,kk=ist.k;ACT={v:m[0],s:m[1],go:()=>{act.cd=1e9;focus=null;if(kk===5)openFurnace(ii);else if(kk===15)openChest(ii);else if(kk===8||kk===13||kk===16||kk===17)openMach(ii);else if(kk===41){dispatch({t:'reap',i:ii});act.cd=.4}else if(kk===9){dispatch({t:'tank',i:ii});act.cd=.6}else if(kk===11){dispatch({t:'plot',i:ii});act.cd=.6}else if(kk===47||kk===48){dispatch({t:'collect',i:ii});act.cd=.6}else if(kk===51){dispatch({t:'feed',i:ii});act.cd=.6}else if(kk===55){dispatch({t:'eforno',i:ii});act.cd=.6}else if(kk===57){dispatch({t:'radio',i:ii});act.cd=.6}else if(kk===33)dispatch({t:'lever',i:ii});else dispatch({t:'sleep',i:ii})}}}
     else if(tameK!=null){const a=animals[tameK],k=tameK;ACT={v:a.sp==='galinha'?'Pegar ovos':'Ordenhar',s:`${a.prod} ${a.sp==='galinha'?'ovo':'leite'}${a.prod>1?'s':''}`,go:()=>{dispatch({t:'farmc',a:k});act.cd=.6}}}
     else if(eq){const T0=TOOLS[eq];
@@ -3189,7 +3193,7 @@ const GUIDE=[
   b:()=>`<p>Molhado e no frio você perde vida. Fique sob um telhado ou perto do fogo para secar.</p><p>A cada 5 dias muda a estação: nas <b>águas</b> chove mais e há tempestades; na <b>seca</b> faz sol, venta e o cerrado pega fogo fácil.</p>`,
   trig:()=>rainI>.3||ST.molhado>40},
  {id:'roca',cat:'Comida',icon:'enxada',t:'Plantar uma roça',
-  b:()=>`<ol style="padding-left:18px;margin:0 0 6px"><li>Pegue sementes ou ramas no milho crioulo, mandioca ou abóbora silvestres.</li><li>Crie a <b>enxada</b> e segure. ${K('Clique no chão (pode arrastar para arar vários)','Toque no chão')} perto de você para arar. O quadrado verde mostra onde dá; vermelho, onde não dá.</li><li>Segure a semente e ${K('clique','toque')} na terra arada. Adubo e mudas funcionam do mesmo jeito.</li><li>Chuva, rio por perto ou cano mantêm molhado. <b>Adubo</b> e farinha de osso aceleram.</li></ol>`,
+  b:()=>`<ol style="padding-left:18px;margin:0 0 6px"><li>Pegue sementes ou ramas no milho crioulo, mandioca ou abóbora silvestres.</li><li>Crie a <b>enxada</b> e segure. ${K('Clique no chão (pode arrastar para arar vários)','Toque no chão')} perto de você para arar. O quadrado verde mostra onde dá; vermelho, onde não dá.</li><li>Segure a semente e ${K('clique','toque')} na terra arada. Adubo e mudas funcionam do mesmo jeito.</li><li>Chuva, rio por perto ou cano mantêm molhado. <b>Adubo</b> e farinha de osso aceleram.</li></ol><p>O milho fica pronto em cerca de 1 dia e meio, a abóbora em 2 e a mandioca em 3. Plante bastante de uma vez.</p>`,
   trig:()=>disc.has('o_milhoW')||disc.has('o_mandiocaW')||disc.has('o_aboboraW')},
  {id:'caca',cat:'Comida',icon:'arco',t:'Caçar',
   b:()=>`<p>Com o <b>arco</b> na mão, mire de longe (flechas de osso). A <b>lança</b> bate forte de perto.</p><p>Bichos ameaçados, como mico-leão, lobo-guará e boto, são <b>só para observar</b>: não dá para caçar.</p>`,
@@ -3213,7 +3217,7 @@ const GUIDE=[
   b:()=>`<ul><li><b>Tocos rebrotam</b>: deixe a raiz e em ~6 min nasce uma muda, que vira árvore em mais alguns minutos. Arrancar o toco acaba com a árvore.</li><li><b>Samambaia, helicônia, ervas, mandacaru e roças silvestres</b> voltam sozinhas no mesmo lugar depois de alguns minutos.</li><li><b>Pitangueira e colmeia</b> refazem frutos e mel.</li><li><b>Árvores espalham mudas</b> em volta. Com a enxada na mão você pode <b>transplantar</b> uma muda para a mochila e plantar onde quiser.</li><li>Pedras, minérios e ossadas não voltam: são finitos.</li></ul><p>A chuva acelera tudo.</p>`,
   trig:()=>[...planted.values()].some(e=>e.t==='stump'&&e.g>.1)},
  {id:'mudas',cat:'Sítio',icon:'semente_ipe',t:'Sementes raras e mudas',
-  b:()=>`<p>Araras e tucanos derrubam sementes que ficam brilhando no chão. Basta passar por cima. Cortar árvores às vezes também dá a semente.</p><p>Segure a semente e use <b>Plantar muda</b> num chão livre. Pitangueira cresce em ~2,5 min; ipê, jatobá e buriti em ~5 min. A chuva acelera.</p>`,
+  b:()=>`<p>Araras e tucanos derrubam sementes que ficam brilhando no chão. Basta passar por cima. Cortar árvores às vezes também dá a semente.</p><p>O <b>viveiro de mudas</b> (era do cobre) multiplica a semente que você puser nele: cerca de uma nova por dia, até 4.</p><p>Segure a semente e use <b>Plantar muda</b> num chão livre. Pitangueira cresce em ~2,5 min; ipê, jatobá e buriti em ~5 min. A chuva acelera.</p>`,
   trig:()=>gdrops.some(g=>Math.hypot(g.x-P.x,g.y-P.y)<8*T)||Object.keys(SAPL).some(k=>inv[k]>0)},
  {id:'cobras',cat:'Perigos',icon:'emplastro',t:'Cobras e veneno',
   b:()=>`<p>A <b>jararaca</b> se esconde no mato e só aparece bem perto. A <b>cascavel</b> faz barulho de chocalho: ouviu, desvie.</p><p>A picada <b>envenena</b> e vai tirando vida. Cure com <b>emplastro de guaco</b> (folhas de guaco + fibra, na tela Criar).</p>`,
@@ -3347,6 +3351,4 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
 buildSprites();buildIcons();buildStructSprites();buildPieceIcons();resize();wxLabel();generate('ipe-amarelo');requestAnimationFrame(loop);
 })();
 </script>
-
-</body>
-</html>
+</body></html>
