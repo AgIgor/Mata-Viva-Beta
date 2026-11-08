@@ -190,7 +190,11 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(-
 .act small{font:600 9px var(--f-hud);color:var(--muted);letter-spacing:.1em}
 .actsw{bottom:calc(178px + env(safe-area-inset-bottom,0px));right:calc(30px + env(safe-area-inset-right,0px));width:48px;height:48px;border-radius:50%;border:1.5px solid rgba(242,194,48,.55);background:rgba(13,21,17,.85);color:var(--lamp);display:grid;place-items:center;align-content:center;gap:0;cursor:pointer;touch-action:manipulation;padding:0}
 .actsw b{font:700 10px var(--f-hud);color:var(--text);letter-spacing:.04em}.actsw small{font:600 8px var(--f-hud);color:var(--muted)}
-.intitle #actSw{visibility:hidden}
+.intitle #actSw,.intitle #altBox{visibility:hidden}
+.altbox{bottom:calc(178px + env(safe-area-inset-bottom,0px));right:calc(12px + env(safe-area-inset-right,0px));display:flex;flex-direction:column-reverse;align-items:flex-end;gap:6px;max-width:min(220px,55vw)}
+.altbox button{display:grid;gap:1px;text-align:right;max-width:100%;padding:7px 12px;border-radius:18px;border:1.5px solid rgba(242,194,48,.55);background:rgba(13,21,17,.88);color:var(--text);font:700 11px var(--f-hud);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;touch-action:manipulation}
+.altbox button small{font:600 9px var(--f-hud);color:var(--muted);letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.altbox button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.altbox .kq{color:var(--lamp)}
 
 .act.idle{border-color:var(--rule);opacity:.55}
 .act.hold{background:var(--lamp);color:var(--lamp-ink)}
@@ -353,6 +357,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(-
 </div>
 
 <button class="hud act idle" id="act" type="button" aria-label="Coletar"><span id="actV">Coletar</span><small id="actK">segure</small></button>
+<div class="hud altbox" id="altBox" hidden></div>
 <button class="hud actsw" id="actSw" type="button" hidden aria-label="Trocar de ação"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg><b id="actSwN">1/2</b><small id="actSwK">Q</small></button>
 <button class="hud act2" id="act2" type="button" hidden><img id="act2I" alt=""><span id="act2V">Comer</span><small id="act2K">F</small></button>
 
@@ -389,7 +394,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(-
       <p>Tudo fica salvo neste navegador, sozinho, a cada poucos segundos.</p>
       <button class="btn" type="button" data-tback>Voltar</button>
     </div>
-    <p class="ttl-ver">Versão 1.26 · teste</p>
+    <p class="ttl-ver">Versão 1.27 · teste</p>
   </div>
 </div>
 <div id="pause" hidden role="dialog" aria-label="Pausa">
@@ -1760,6 +1765,7 @@ const bagEl=document.getElementById('bag'),slotsEl=document.getElementById('slot
 const craftEl=document.getElementById('craft'),recipesEl=document.getElementById('recipes'),craftBtn=document.getElementById('craftBtn');
 const actBtn=document.getElementById('act'),actV=document.getElementById('actV'),actK=document.getElementById('actK'),act2Btn=document.getElementById('act2'),act2={fire:false};
 document.getElementById('rmBtn').addEventListener('click',()=>{audio();setBuild(bmode&&bmode.k===99?null:pieceByK(99))});
+let altKey='';document.getElementById('altBox').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-j]');if(!b)return;e.preventDefault();e.stopPropagation();const a=ALTS[+b.dataset.j];if(a&&a.ok!==false){audio();a.go()}});
 document.getElementById('actSw').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();audio();cycleAct()});
 act2Btn.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();act2.fire=true;audio()});
 let vw=0,vh=0,DPR=1,zoom=1,baseZoom=1,userZ=1,time=0,wind=.35,DT=.016;
@@ -2910,7 +2916,7 @@ function update(dt){
     if(holding){act.cd-=dt;if(act.cd<=0&&bvalid){audio();placeAt(i);act.cd=.22}}else act.cd=0;
   }else{
     near=findNear();target=near&&!near.picked?near:null;ist=findInteract();
-    if(ist&&target&&Math.hypot(target.x-P.x,target.y-P.y)<ist.d)ist=null;
+    const ist0=ist;if(ist&&target&&Math.hypot(target.x-P.x,target.y-P.y)<ist.d)ist=null;
     const eq=equipped(),dv={down:[0,1],up:[0,-1],left:[-1,0],right:[1,0]}[P.dir],ft=Math.floor((P.y+dv[1]*T*.85-4)/T)*W+Math.floor((P.x+dv[0]*T*.85)/T);
     foe=null;{const k=findPrey(64);if(k!=null){const a=animals[k];if(SPEC[a.sp].kind!=='prey'||a.mode==='chase')foe=k}}
     prey=null;farmI=-1;ACT=null;const boatK=P.boat?-1:nearBoat(115),npcK=nearNPC(84),tameK=findTame(64),feedK=eq&&!FOOD[eq]?findFeed(eq,85):eq?findFeed(eq,85):null;
@@ -2959,7 +2965,7 @@ function update(dt){
     else if(eq&&!fc&&!ACT2&&FOOD[eq]&&ACT&&!ACT.self){const id=eq;ACT2={v:id==='emplastro'?'Aplicar':RETURNS[id]||id==='polpa'?'Beber':'Comer',s:ITEMS[id].toLowerCase(),go:()=>{dispatch({t:'eat',id});act.cd=.6}}}
     if(!ACT){if(target)ACT=hitAct(target,eq);else{const k=findPrey(64);if(k!=null){prey=k;ACT=meleeAct(k)}else if(nearWaterC)ACT={v:'Beber',s:'rio · arriscado',go:()=>{dispatch({t:'drink'});act.cd=.6}}}}
     {const al=[],key=a=>a.v+'|'+a.s,add=a=>{if(a&&a.ok!==false&&!al.some(b=>key(b)===key(a))&&!(ACT2&&key(ACT2)===key(a)))al.push(a)};add(ACT);
-      if(!fc){if(ist&&!isLive(eq))add(istAct(ist)[0]);if(tameK!=null){const a=animals[tameK],k=tameK;add({v:farmVerb(a.sp),s:`${a.prod*(SPEC[a.sp].farmN||1)} de ${ITEMS[SPEC[a.sp].farm].toLowerCase()}`,go:()=>{dispatch({t:'farmc',a:k});act.cd=.6}})}
+      if(!fc){const isx=ist||ist0;if(isx&&!isLive(eq))add(istAct(isx)[0]);if(tameK!=null){const a=animals[tameK],k=tameK;add({v:farmVerb(a.sp),s:`${a.prod*(SPEC[a.sp].farmN||1)} de ${ITEMS[SPEC[a.sp].farm].toLowerCase()}`,go:()=>{dispatch({t:'farmc',a:k});act.cd=.6}})}
         if(target)add(hitAct(target,eq));if(npcK>=0){const n=villagers[npcK],k=npcK;add({v:'Trocar',s:`${n.name} · ${n.role}`,go:()=>{openTrade(k);act.cd=.5}})}
         if(!P.boat&&boatK>=0){const k=boatK;add({v:'Embarcar',s:'canoa',go:()=>{dispatch({t:'boatOn',b:k});act.cd=.6}})}if(foe!=null)add(meleeAct(foe));if(nearWaterC&&!P.boat)add({v:'Beber',s:'rio · arriscado',go:()=>{dispatch({t:'drink'});act.cd=.6}})}
       ALTS=al;if(al.length>1){let k=al.findIndex(a=>a.v===altSel);if(k<0)k=0;altIdx=k;ACT=al[k]}else altIdx=0}
@@ -3229,7 +3235,8 @@ function render(){
     if(actV.textContent!==verb)actV.textContent=verb;
     if(actK.textContent!==sub)actK.textContent=sub;
     actBtn.classList.toggle('idle',bmode?!bvalid:!(ACT&&ACT.ok!==false));
-    {const sw=document.getElementById('actSw'),show=!bmode&&ALTS.length>1;if(sw.hidden===show)sw.hidden=!show;if(show){const t=`${altIdx+1}/${ALTS.length}`,el=document.getElementById('actSwN');if(el.textContent!==t)el.textContent=t;document.getElementById('actSwK').textContent=coarse?'trocar':'tecla Q'}}
+    {const sw=document.getElementById('actSw');if(!sw.hidden)sw.hidden=true;const box=document.getElementById('altBox'),show=!bmode&&ALTS.length>1;if(box.hidden===show)box.hidden=!show;
+      if(show){const k=altIdx+'#'+ALTS.map(a=>a.v+'|'+a.s).join('#');if(k!==altKey){altKey=k;box.innerHTML=ALTS.map((a,j)=>j===altIdx?'':`<button type="button" data-j="${j}"><span>${esc(a.v)}</span><small>${esc(a.s||'')}${!coarse&&j===(altIdx+1)%ALTS.length?' · <b class="kq">Q</b>':''}</small></button>`).join('')}}else altKey=''}
     {const show=!bmode&&!!ACT2;if(act2Btn.hidden===show)act2Btn.hidden=!show;if(show){const e2=equipped(),im=ICON[e2];if(im&&document.getElementById('act2I').getAttribute('src')!==im)document.getElementById('act2I').src=im;const v2=ACT2.v;if(document.getElementById('act2V').textContent!==v2)document.getElementById('act2V').textContent=v2;document.getElementById('act2K').textContent=coarse?'':'tecla F'}}
     const cctx=nearFire+'|'+nearBench();if(cctx!==lastCraftCtx){lastCraftCtx=cctx;if(!craftEl.hidden)renderCraft()}
   }
