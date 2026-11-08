@@ -402,7 +402,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(-
       <p>Tudo fica salvo neste navegador, sozinho, a cada poucos segundos.</p>
       <button class="btn" type="button" data-tback>Voltar</button>
     </div>
-    <p class="ttl-ver">Versão 1.34 · teste</p>
+    <p class="ttl-ver">Versão 1.35 · teste</p>
   </div>
 </div>
 <div id="lookP" hidden role="dialog" aria-label="Personagem">
@@ -1987,12 +1987,12 @@ let craftMode='hand',stationI=-1;
 function openStation(i){const k=blockG[i];if(k!==3&&k!==4)return;stationI=i;craftMode=k===3?'fire':'bench';craftEl.hidden=false;bagEl.hidden=true;buildEl.hidden=true;renderCraft()}
 function renderCraft(){
   const nb=nearBench(),mode=craftMode;document.getElementById('craftTitle').textContent=mode==='fire'?'Fogueira':mode==='bench'?'Bancada de trabalho':'Criar';
-  document.getElementById('craftSub').textContent=mode==='fire'?(nearFire?'Fogo aceso · assar, cozinhar e ferver':'Fogo apagado pela chuva · faça um telhado em cima'):mode==='bench'?'Ferramentas de metal, roupas, armas e reparos':'Receitas à mão · toque na bancada ou na fogueira para as outras';
+  document.getElementById('craftSub').textContent=mode==='fire'?(nearFire?'Fogo aceso · assar, cozinhar e ferver':'Fogo apagado pela chuva · faça um telhado em cima'):mode==='bench'?'Tudo o que dá para criar: receitas de bancada e à mão, mais os reparos':'Receitas à mão · toque na bancada ou na fogueira para as outras';
   const tools=Object.keys(TOOLS).filter(id=>inv[id]>0);let h='';
   if(mode==='fire'){h+=sec('Fogueira')+(nearFire?COOK.map(c=>{const tl=!c.tool||inv[c.tool]>0,ok=hasMats(c.need)&&tl;
       return`<div class="rec"><div class="rec-h"><img src="${ICON[c.out]}" alt=""><div><b>${ITEMS[c.out]}</b><span>Você tem ${inv[c.out]||0}</span></div></div><p>${c.tool?'Ferve a água do rio na panela: fica segura para beber.':`Comendo: ${foodText(c.out)}`}</p><div class="need">${c.need.map(([id,n])=>chip(id,n)).join('')}${c.tool?chip(c.tool,1):''}</div><button class="btn" type="button" data-cook="${c.out}"${ok?'':' disabled'}>${ok?(c.verb||'Assar'):!tl?'Precisa de panela':'Faltam materiais'}</button></div>`}).join(''):'<p class="emptymsg">A chuva apagou o fogo. Espere passar ou faça um telhado de palha em cima da fogueira.</p>');
     recipesEl.innerHTML=h;return}
-  if(mode==='bench'){for(const[e,name]of ERAS){const rs=RECIPES.filter(r=>r.era===e&&r.st==='bench'),ok=eraOk(e);if(!rs.length&&ok)continue;h+=sec(ok?name:`${name} · bloqueada`);if(!ok){h+=`<p class="emptymsg">${ERA_HINT[e]}.</p>`;continue}h+=rs.map(recCard).join('')}
+  if(mode==='bench'){for(const[e,name]of ERAS){const rs=RECIPES.filter(r=>r.era===e&&r.st==='bench').concat(RECIPES.filter(r=>r.era===e&&!r.st)),ok=eraOk(e);if(!rs.length&&ok)continue;h+=sec(ok?name:`${name} · bloqueada`);if(!ok){h+=`<p class="emptymsg">${ERA_HINT[e]}.</p>`;continue}h+=rs.map(recCard).join('')}
     h+=sec('Reparos')+(tools.length?tools.map(repCard).join(''):'<p class="emptymsg">Nenhuma ferramenta para reparar.</p>');recipesEl.innerHTML=h;return}
   for(const[e,name]of ERAS){const rs=RECIPES.filter(r=>r.era===e&&!r.st),ok=eraOk(e);
     h+=sec(ok?name:`${name} · bloqueada`);
