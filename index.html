@@ -402,7 +402,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(-
       <p>Tudo fica salvo neste navegador, sozinho, a cada poucos segundos.</p>
       <button class="btn" type="button" data-tback>Voltar</button>
     </div>
-    <p class="ttl-ver">Versão 1.35 · teste</p>
+    <p class="ttl-ver">Versão 1.36 · teste</p>
   </div>
 </div>
 <div id="lookP" hidden role="dialog" aria-label="Personagem">
@@ -940,7 +940,7 @@ const RECIPES=[
   {out:'chapeu_couro',n:1,era:'pedra',st:'bench',need:[['couro',2],['fibra',2]],desc:'Na mochila: protege do sol do cerrado (menos sede), do granizo e tira mais 10% do dano.'},
   {out:'perneira',n:1,era:'pedra',st:'bench',need:[['couro',3],['corda',1]],desc:'Na mochila: segura 7 de cada 10 picadas de cobra e tira mais 12% do dano.'},
   {out:'lanca_cobre',n:1,era:'cobre',st:'bench',need:[['madeira',2],['barra_cobre',2],['corda',1]],desc:'Golpe de 3 contra animais. Dura 90 golpes.'},
-  {out:'lanca_ferro',n:1,era:'ferro',st:'bench',need:[['madeira',2],['barra_ferro',2],['corda',1]],desc:'Golpe de 4: derruba uma onça em dois golpes. Dura 160.'},
+  {out:'lanca_ferro',n:1,era:'ferro',st:'bench',need:[['madeira',2],['barra_ferro',2],['corda',1]],desc:'Golpe de 4, o mais forte. Bom contra onça, queixada e jacaré. Dura 160.'},
   {out:'facao',n:1,era:'ferro',st:'bench',need:[['barra_ferro',2],['madeira',1],['couro',1]],desc:'Golpe de 3, rápido. Bom contra cobras: com ele na mão você golpeia antes da picada. Dura 120.'},
   {out:'roupa_couro',n:1,era:'pedra',st:'bench',need:[['couro',4],['fibra',2],['corda',1]],desc:'Vestida enquanto estiver na mochila: reduz o dano dos animais em 40%, molha menos e protege do frio.'},
   {out:'arco',n:1,era:'pedra',need:[['madeira',3],['corda',2]],desc:'Atira flechas em animais a até 5 passos. Não gasta.'},
@@ -2260,6 +2260,7 @@ const SPEC={
   porco:{name:'Porco caipira',hp:3,kind:'prey',flee:75,run:115,walk:18,sz:.72,farm:'adubo',cyc:110,breed:.5,lasso:.45,loot:[['carne_crua',3],['couro',1],['ossos',1]],tag:'Dá para laçar e criar'},
   onca:{name:'Onça-pintada',hp:6,kind:'hunter',flee:0,run:215,walk:70,sz:1.15,dmg:16,cd:1.5,loot:[['carne_crua',3],['couro',2],['ossos',2]],tag:'Perigosa · teme o fogo'}
 };
+for(const k in SPEC){const S3=SPEC[k],m=S3.kind==='prey'?3:S3.kind==='snake'?2:S3.kind==='bird'||S3.kind==='tree'||S3.kind==='swim'?2:2.5;S3.hp=Math.round(S3.hp*m)}
 let herdAggro={},hurtFlash=0,lastHurt='';
 function animalOk(x,y,a){if(x<T*2||y<T*2||x>(W-2)*T||y>(H-2)*T)return false;const S2=a&&SPEC[a.sp];if(S2&&(S2.kind==='bird'||S2.kind==='tree'))return true;if(S2&&S2.kind==='swim'){sample(x/T,y/T);return WET>.03}const i=Math.floor(y/T)*W+Math.floor(x/T);if(blockG[i]||soilG[i])return false;sample(x/T,y/T);return WET<(S2&&S2.water?.3:.1)}
 function newAnimal(sp,hx,hy,r,herd){return{sp,x:hx+(r()-.5)*60,y:hy+(r()-.5)*60,hx,hy,vx:0,vy:0,dir:r()<.5?-1:1,hp:SPEC[sp].hp,t:r()*3,ph:0,hurt:0,dead:false,rt:0,sz:SPEC[sp].sz*(.9+r()*.2),herd,atk:0}}
@@ -2290,7 +2291,7 @@ function stepAnimals(dt){
   for(const a of animals){
     const S2=SPEC[a.sp];
     if(a.dead&&a.tame){a.gone=true;continue}
-    if(a.dead){a.rt-=dt;if(a.sp!=='onca'&&a.rt<=0&&Math.hypot(a.hx-P.x,a.hy-P.y)>12*T)Object.assign(a,newAnimal(a.sp,a.hx,a.hy,Math.random,a.herd));continue}
+    if(a.dead){a.rt-=dt;if(a.sp!=='onca'&&a.rt<=0&&Math.hypot(a.hx-P.x,a.hy-P.y)>12*T)Object.assign(a,newAnimal(a.sp,a.hx,a.hy,Math.random,a.herd));continue}if(a.hp<SPEC[a.sp].hp&&a.hurt<=0)a.hp=Math.min(SPEC[a.sp].hp,a.hp+dt*.02);
     const dx=a.x-P.x,dy=a.y-P.y,d=Math.hypot(dx,dy)||1;if(d>30*T)continue;
     a.t-=dt;a.hurt=Math.max(0,a.hurt-dt);a.atk=Math.max(0,a.atk-dt);let mode='wander';
     if(S2.kind==='bird'||S2.kind==='tree'){const alt=S2.alt!=null?S2.alt:42;if(a.z==null){a.z=alt;a.ang=Math.random()*TAU}a.fl=Math.max(0,(a.fl||0)-dt);if(d<S2.flee&&!fainted)a.fl=3;let tz;
