@@ -383,7 +383,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(-
       <p>Tudo fica salvo neste navegador, sozinho, a cada poucos segundos.</p>
       <button class="btn" type="button" data-tback>Voltar</button>
     </div>
-    <p class="ttl-ver">Versão 1.24 · teste</p>
+    <p class="ttl-ver">Versão 1.25 · teste</p>
   </div>
 </div>
 <div id="pause" hidden role="dialog" aria-label="Pausa">
@@ -772,6 +772,11 @@ function buildFern(rng){
   });
   return{body,top:-40,sh:{rx:26,ry:8,ox:4,oy:-1},sway:1};
 }
+function buildVein(rng,ore){const rs=[0,1,2,3].map(()=>buildRock(rng,ore).body);
+  const body=mk(160,120,80,96,x=>{const at=(b,ox,oy,sc)=>x.drawImage(b.c,ox-b.ax*sc,oy-b.ay*sc,b.w*sc,b.h*sc);at(rs[0],-4,-14,1.35);at(rs[1],-26,0,1.1);at(rs[2],24,2,1.15);at(rs[3],4,10,.8);
+    const c=ore==='iron'?'#c4652f':ore==='copper'?'#5cc4aa':ore==='coal'?'#2c2925':'#b8b2a2';for(let k=0;k<7;k++){const bx=-30+rng()*60,by=12+rng()*8;x.fillStyle=k%2?c:'#7d786c';x.beginPath();x.ellipse(bx,by,3+rng()*2,2+rng()*1.5,rng()*3,0,TAU);x.fill()}
+    if(ore)for(let k=0;k<4;k++){const sx=-28+rng()*56,sy=-40+rng()*36;x.fillStyle='#fffbe8';x.beginPath();x.moveTo(sx,sy-3);x.lineTo(sx+.7,sy-.7);x.lineTo(sx+3,sy);x.lineTo(sx+.7,sy+.7);x.lineTo(sx,sy+3);x.lineTo(sx-.7,sy+.7);x.lineTo(sx-3,sy);x.lineTo(sx-.7,sy-.7);x.closePath();x.fill()}});
+  return{body,top:-62,sh:{rx:46,ry:15,ox:6,oy:2}}}
 function buildRock(rng,ore){
   const rx=17+rng()*6,ry=12+rng()*3;
   const body=mk(80,60,40,46,x=>{
@@ -878,7 +883,8 @@ const TYPES={
   stump:{name:'Toco',tag:'Madeira',col:6,hp:2,verb:'Arrancar',drops:[['madeira',1]],fx:['#8c644b','#c9a27a'],snd:'wood',fy:8}
 };
 for(const k of['ipeA','ipeR','jatoba','buriti','mandacaru','stump','mangue'])TYPES[k].tool='machado';
-for(const k of['rock','iron','copper','paredao','carvaoM'])TYPES[k].tool='picareta';
+Object.assign(TYPES,{veioF:{name:'Veio de ferro',tag:'Jazida · muito minério',col:24,hp:5,verb:'Minerar',drops:[['ferro',3],['pedra',1]],fx:['#8e8478','#c4652f'],snd:'ore',fy:22,vein:1},veioC:{name:'Veio de cobre',tag:'Jazida · muito minério',col:24,hp:5,verb:'Minerar',drops:[['cobre',3],['pedra',1]],fx:['#8a8c84','#5cc4aa'],snd:'ore',fy:22,vein:1},veioK:{name:'Veio de carvão',tag:'Jazida · muito carvão',col:24,hp:5,verb:'Minerar',drops:[['carvao',3],['pedra',1]],fx:['#5a5650','#1e1c1a'],snd:'ore',fy:22,vein:1},pedreira:{name:'Pedreira',tag:'Jazida · muita pedra',col:24,hp:4,verb:'Quebrar',drops:[['pedra',4]],fx:['#9a968a','#5c5951'],snd:'stone',fy:22,vein:1}});
+for(const k of['rock','iron','copper','paredao','carvaoM','veioF','veioC','veioK','pedreira'])TYPES[k].tool='picareta';
 const TOOLMAX=40;
 const TOOLS={lanca:{fam:'lanca',dmg:2,max:60,short:'lança',rep:[['madeira',1]]},enxada:{fam:'enxada',dmg:0,max:60,short:'enxada',rep:[['madeira',1]]},machado:{fam:'machado',dmg:2,max:40,short:'machado',rep:[['madeira',1],['corda',1]]},picareta:{fam:'picareta',dmg:2,max:40,short:'picareta',rep:[['madeira',1],['corda',1]]},
   machado_cobre:{fam:'machado',dmg:3,max:70,short:'machado cobre',rep:[['barra_cobre',1]]},picareta_cobre:{fam:'picareta',dmg:3,max:70,short:'picareta cobre',rep:[['barra_cobre',1]]},
@@ -929,6 +935,7 @@ function buildSprites(){const r=mb(20261105),three=f=>[0,1,2].map(f);
   SP.stump=three(()=>buildStump(r));SP.colmeia=three(()=>buildHive(r));SP.casa=three(()=>buildCasa(r));SP.barraca=three(()=>buildMudaSprite());SP.fogV=three(()=>buildMudaSprite());SP.guaco=three(()=>buildHerb(r,'guaco'));SP.boldo=three(()=>buildHerb(r,'boldo'));SP.quina=three(()=>buildHerb(r,'quina'));SP.muda=three(()=>buildMudaSprite());SP.mangue=three(()=>buildMangue(r));SP.paredao=three(()=>buildCliff(r));SP.carvaoM=three(()=>buildRock(r,'coal'));SP.carcaca=three(()=>buildCarcass(r));
   SP.mandiocaW=three(()=>buildCropSprite('mandioca',r));SP.milhoW=three(()=>buildCropSprite('milho',r));SP.aboboraW=three(()=>buildCropSprite('abobora',r));
   SP.cacau=three(()=>buildCacau(r));SP.acai=three(()=>buildAcai(r));
+  SP.veioF=three(()=>buildVein(r,'iron'));SP.veioC=three(()=>buildVein(r,'copper'));SP.veioK=three(()=>buildVein(r,'coal'));SP.pedreira=three(()=>buildVein(r,null));
 }
 
 /* ---------- item icons ---------- */
@@ -1074,7 +1081,7 @@ const PIECES=[
   {k:55,id:'eforno',era:'eletrica',name:'Forno elétrico',cost:[['pedra',10],['bobina',1],['barra_ferro',2]],desc:'Funde minério sem lenha nem carvão, com 3 de energia.'},
   {k:56,id:'irrigador',era:'eletrica',name:'Irrigador',cost:[['cano',2],['bobina',1],['barra_cobre',1]],desc:'Rega as plantas a até 3 casas e faz crescer 50% mais rápido. Usa 1 de energia.'},
   {k:57,id:'radio',era:'eletrica',name:'Rádio',cost:[['bobina',3],['barra_cobre',4],['barra_ferro',4],['tabua',4],['lampada',2]],desc:'Precisa de 6 de energia. Transmita para tentar contato com o mundo lá fora.'},
-  {k:99,id:'remove',era:'pedra',name:'Desmontar',cost:[],desc:'Remove a peça mais alta do lugar e devolve todo o material.'}
+  {k:99,id:'remove',era:'pedra',name:'Desmontar',cost:[],desc:'Remove a peça mais alta do lugar e devolve todo o material. Também tira plantas e árvores pela raiz (sem dar madeira nem frutos), e nada nasce ali sozinho depois.'}
 ];
 const pieceByK=k=>PIECES.find(p=>p.k===k);
 let floorG=new Uint8Array(W*H),blockG=new Uint8Array(W*H),roofG=new Uint8Array(W*H),loadedBuild=null;
@@ -1630,10 +1637,10 @@ function stepFurnaces(dt){for(const[i,f]of furn){if(f.n<=0)continue;const fo=fol
 function saveKey(){return(MPG?'mataviva:mp:':'mataviva:')+seedStr}
 var REMOTE=false,MPG=false,LOADOVR=null,MUTE=false;
 function saveData(){const f=[],r=[],b={},br=[];for(let i=0;i<W*H;i++){if(floorG[i]===14)br.push(i);else if(floorG[i])f.push(i);if(roofG[i])r.push(i);if(blockG[i])b[i]=blockG[i]}
-  return({inv,ch:changes,wear,bd:{f,r,b,br},st:ST,pos:[P.x,P.y],fu:[...furn],day:[dayT,dayN],torch:torchT,bed:bedSpawn,net:[...netG.keys()].filter(i=>netG[i]).map(i=>[i,netG[i]]),ma:[...mach],lv:[...levers],eras,v:9,ts:Date.now(),pt:Math.round(playT),eq:equip,disc:[...disc],ach:[...achs],qd:[...qDone],stats,showQ,tips:[tipsOn,[...tipsSeen]],vil:vstate,bt:boats.map(b=>[b.x|0,b.y|0,Math.max(0,DIR4.indexOf(b.dir))]),onb:P.boat?1:0,exp:packBits(explored),wp,pl:[...planted],tm:animals.filter(a=>a.tame&&!a.dead).map(a=>[a.sp,a.x|0,a.y|0,a.hx|0,a.hy|0,a.prod||0,+(a.prog||0).toFixed(2),+a.sz.toFixed(2)]),soil:[...soilG.keys()].filter(i=>soilG[i]),cr:[...crops]})}
+  return({inv,ch:changes,wear,bd:{f,r,b,br},st:ST,pos:[P.x,P.y],fu:[...furn],day:[dayT,dayN],torch:torchT,bed:bedSpawn,net:[...netG.keys()].filter(i=>netG[i]).map(i=>[i,netG[i]]),ma:[...mach],lv:[...levers],eras,v:9,vn:[...veins].map(([i,v])=>[i,v.type,v.stock]),ts:Date.now(),pt:Math.round(playT),eq:equip,disc:[...disc],ach:[...achs],qd:[...qDone],stats,showQ,tips:[tipsOn,[...tipsSeen]],vil:vstate,bt:boats.map(b=>[b.x|0,b.y|0,Math.max(0,DIR4.indexOf(b.dir))]),onb:P.boat?1:0,exp:packBits(explored),wp,pl:[...planted],tm:animals.filter(a=>a.tame&&!a.dead).map(a=>[a.sp,a.x|0,a.y|0,a.hx|0,a.hy|0,a.prod||0,+(a.prog||0).toFixed(2),+a.sz.toFixed(2)]),soil:[...soilG.keys()].filter(i=>soilG[i]),cr:[...crops]})}
 function save(){if(REMOTE||inTitle)return;try{localStorage.setItem(saveKey(),JSON.stringify(saveData()))}catch(_){}}
 let loadedPos=null;
-function load(){playT=0;inv={};changes={};wear={};loadedBuild=null;loadedPos=null;ST=ST0();dayT=.3;dayN=1;torchT=120;bedSpawn=-1;furn=new Map();netG=new Uint8Array(W*H);mach=new Map();netDirty=true;levers=new Map();eras={cobre:false,ferro:false,vapor:false};needMig=false;equip=null;disc=new Set();achs=new Set();qDone=new Set();loadedTame=[];fishing=null;vstate={d:0,u:{}};boats=[];loadedOnBoat=false;P.boat=null;tipsSeen=new Set();tipsOn=true;coachCD=2;if(typeof coachEl!=='undefined'&&coachEl)coachEl.hidden=true;planted=new Map();fires.clear();burnt.clear();gdrops=[];stats=newStats();explored=new Uint8Array(W*H);wp=-1;hadStats=false;soilG=new Uint8Array(W*H);crops=new Map();try{const d=LOADOVR||JSON.parse(localStorage.getItem(saveKey())||'null');LOADOVR=null;;if(d){if(d.day){dayT=d.day[0];dayN=d.day[1]}playT=d.pt||0;if(d.torch)torchT=d.torch;if(d.bed!=null)bedSpawn=d.bed;if(d.fu)furn=new Map(d.fu);if(d.net)for(const[i,b]of d.net)netG[i]=b;if(d.ma)mach=new Map(d.ma);if(d.lv)levers=new Map(d.lv);equip=d.eq||null;if(d.disc)disc=new Set(d.disc);if(d.ach)achs=new Set(d.ach);if(d.qd)qDone=new Set(d.qd);if(d.stats){stats=Object.assign(newStats(),d.stats);hadStats=true}if(d.showQ===false)showQ=false;if(d.exp)unpackBits(d.exp,explored);if(d.wp!=null)wp=d.wp;loadedTame=d.tm||[];if(d.vil)vstate=d.vil;boats=(d.bt||[]).map(b=>({bt:1,x:b[0],y:b[1],dir:DIR4[b[2]]||'right',mv:0}));loadedOnBoat=!!d.onb;if(d.tips){tipsOn=d.tips[0]!==false;tipsSeen=new Set(d.tips[1]||[])}planted=new Map(d.pl||[]);if(d.soil)for(const i of d.soil)soilG[i]=1;if(d.cr)crops=new Map(d.cr);eras=Object.assign({cobre:false,ferro:false,vapor:false,eletrica:false},d.eras||{});needMig=!d.v;inv=d.inv||{};changes=d.ch||{};wear=d.wear||{};loadedBuild=d.bd||null;if(d.st)ST=Object.assign(ST0(),d.st);loadedPos=d.pos||null;if(inv.fio_cobre){inv.barra_cobre=(inv.barra_cobre||0)+Math.ceil(inv.fio_cobre/3);delete inv.fio_cobre}if(!d.eras){if(inv.barra_cobre||inv.barra_ferro||(d.ma&&d.ma.length))eras.cobre=true;if(inv.barra_ferro||inv.machado_ferro||inv.picareta_ferro)eras.ferro=true}}}catch(_){}}
+function load(){playT=0;loadedVeins=null;inv={};changes={};wear={};loadedBuild=null;loadedPos=null;ST=ST0();dayT=.3;dayN=1;torchT=120;bedSpawn=-1;furn=new Map();netG=new Uint8Array(W*H);mach=new Map();netDirty=true;levers=new Map();eras={cobre:false,ferro:false,vapor:false};needMig=false;equip=null;disc=new Set();achs=new Set();qDone=new Set();loadedTame=[];fishing=null;vstate={d:0,u:{}};boats=[];loadedOnBoat=false;P.boat=null;tipsSeen=new Set();tipsOn=true;coachCD=2;if(typeof coachEl!=='undefined'&&coachEl)coachEl.hidden=true;planted=new Map();fires.clear();burnt.clear();gdrops=[];stats=newStats();explored=new Uint8Array(W*H);wp=-1;hadStats=false;soilG=new Uint8Array(W*H);crops=new Map();try{const d=LOADOVR||JSON.parse(localStorage.getItem(saveKey())||'null');LOADOVR=null;;if(d){if(d.day){dayT=d.day[0];dayN=d.day[1]}playT=d.pt||0;loadedVeins=Array.isArray(d.vn)?d.vn:null;if(d.torch)torchT=d.torch;if(d.bed!=null)bedSpawn=d.bed;if(d.fu)furn=new Map(d.fu);if(d.net)for(const[i,b]of d.net)netG[i]=b;if(d.ma)mach=new Map(d.ma);if(d.lv)levers=new Map(d.lv);equip=d.eq||null;if(d.disc)disc=new Set(d.disc);if(d.ach)achs=new Set(d.ach);if(d.qd)qDone=new Set(d.qd);if(d.stats){stats=Object.assign(newStats(),d.stats);hadStats=true}if(d.showQ===false)showQ=false;if(d.exp)unpackBits(d.exp,explored);if(d.wp!=null)wp=d.wp;loadedTame=d.tm||[];if(d.vil)vstate=d.vil;boats=(d.bt||[]).map(b=>({bt:1,x:b[0],y:b[1],dir:DIR4[b[2]]||'right',mv:0}));loadedOnBoat=!!d.onb;if(d.tips){tipsOn=d.tips[0]!==false;tipsSeen=new Set(d.tips[1]||[])}planted=new Map(d.pl||[]);if(d.soil)for(const i of d.soil)soilG[i]=1;if(d.cr)crops=new Map(d.cr);eras=Object.assign({cobre:false,ferro:false,vapor:false,eletrica:false},d.eras||{});needMig=!d.v;inv=d.inv||{};changes=d.ch||{};wear=d.wear||{};loadedBuild=d.bd||null;if(d.st)ST=Object.assign(ST0(),d.st);loadedPos=d.pos||null;if(inv.fio_cobre){inv.barra_cobre=(inv.barra_cobre||0)+Math.ceil(inv.fio_cobre/3);delete inv.fio_cobre}if(!d.eras){if(inv.barra_cobre||inv.barra_ferro||(d.ma&&d.ma.length))eras.cobre=true;if(inv.barra_ferro||inv.machado_ferro||inv.picareta_ferro)eras.ferro=true}}}catch(_){}}
 function miniStruct(i){const k=blockG[i],c=soilG[i]&&!k&&!roofG[i]?'#6b4a2e':isWallK(k)?'#4a3220':roofG[i]?'#c49a52':k?'#7a5232':netG[i]&MECH?'#8a5d36':netG[i]&2?'#6b8a9a':floorG[i]?'#a77b4f':null;if(!c){miniPixel(i);return}const mx=miniBase.getContext('2d');mx.fillStyle=c;mx.fillRect(i%W,(i/W)|0,1,1)}
 function makeStump(o){return{type:'stump',v:o.v,x:o.x,y:o.y,ph:o.ph,i:o.i,from:o.from||(o.type!=='stump'&&TYPES[o.type]&&TYPES[o.type].tree?o.type:null),g:o.g&&o.type==='stump'?o.g:0}}
 const REGROW={fern:120,helic:180,guaco:240,boldo:240,quina:300,mandiocaW:300,milhoW:300,aboboraW:300,mandacaru:420,mangue:0};
@@ -1663,6 +1670,7 @@ function generate(txt){
   }
   for(let ty=2;ty<H-2;ty++)for(let tx=2;tx<W-2;tx++){const i=ty*W+tx;if(biome[i]!==7||objAt[i])continue;let c=false;for(const d of[1,-1,W,-W])if(biome[i+d]===8)c=true;
     if(c&&h2(tx,ty,S+611)<.55){let bad=false;for(const k of[i-1,i-W-1,i-W,i-W+1]){const o=objAt[k];if(o&&o.type==='paredao')bad=true}if(!bad)objAt[i]={type:'paredao',v:Math.floor(h2(tx,ty,S+502)*3),x:(tx+.5)*T,y:(ty+.5)*T+4,ph:0,i}}}
+  for(let i=0;i<W*H;i++){const o=objAt[i];if(!o||biome[i]===8)continue;const keep={rock:.3,iron:.2,copper:.22,carvaoM:.4}[o.type];if(keep!=null&&h2(i%W,(i/W)|0,S+777)>keep)objAt[i]=null}
   floorG=new Uint8Array(W*H);blockG=new Uint8Array(W*H);roofG=new Uint8Array(W*H);setBuild(null);
   load();
   if(loadedBuild){for(const i of loadedBuild.f||[])floorG[i]=10;for(const i of loadedBuild.br||[])floorG[i]=14;for(const i of loadedBuild.r||[])roofG[i]=20;for(const k in loadedBuild.b||{})blockG[+k]=loadedBuild.b[k]}
@@ -1673,7 +1681,7 @@ function generate(txt){
   for(const k in changes){const i=+k,o=objAt[i];if(!o)continue;if(changes[k]==='s'&&TYPES[o.type].tree){objAt[i]=makeStump(o);if(!planted.has(i))planted.set(i,{t:'stump',from:o.type,g:0})}else if(changes[k]==='x'){objAt[i]=null;if(!planted.has(i)&&REGROW[o.type])planted.set(i,{t:null,back:o.type,left:REGROW[o.type]*Math.random()})}}
   for(const[i,e]of planted){const x=(i%W+.5)*T,y=(((i/W)|0)+.5)*T+4,base={v:i%3,x,y,ph:(i*1.7)%TAU,i};objAt[i]=!e.t?null:e.t==='muda'?Object.assign(base,{type:'muda',grow:e.to,g:e.g||0}):e.t==='stump'?Object.assign(makeStump(base),{from:e.from||null,g:e.g||0}):Object.assign(base,{type:e.t})}
   for(let i=0;i<W*H;i++){const o=objAt[i];if(o&&(o.type==='cacau'||o.type==='acai')&&!planted.has(i)&&(floorG[i]||blockG[i]||roofG[i]||netG[i]||soilG[i]||crops.has(i)))objAt[i]=null}
-  placeVillage();
+  placeVillage();placeVeins();
   const mx=miniBase.getContext('2d'),id=mx.createImageData(W,H);
   for(let ty=0;ty<H;ty++)for(let tx=0;tx<W;tx++){groundRGB(tx+.5,ty+.5,GC);const o=objAt[ty*W+tx],k=(ty*W+tx)*4,f=o&&TYPES[o.type].big?.62:1;id.data[k]=GC[0]*f;id.data[k+1]=GC[1]*f;id.data[k+2]=GC[2]*f;id.data[k+3]=255}
   mx.putImageData(id,0,0);
@@ -1955,7 +1963,7 @@ document.getElementById('bbExit').addEventListener('click',()=>setBuild(null));
 function canPlace(p,i){if(VIL&&VIL.tiles.has(i))return false;
   if(!p||i<0)return false;const tx=i%W,ty=(i/W)|0;if(tx<1||ty<1||tx>W-2||ty>H-2)return false;
   if(Math.hypot((tx+.5)*T-P.x,(ty+.5)*T-P.y)>3.3*T)return false;
-  if(p.k===99)return!!(roofG[i]||blockG[i]||floorG[i]||netG[i]||soilG[i])||boatAtTile(i)>=0;
+  if(p.k===99)return!!(roofG[i]||blockG[i]||floorG[i]||netG[i]||soilG[i])||boatAtTile(i)>=0||removablePlant(i);
   if(p.k===14){if(!affordable(p)||floorG[i]||blockG[i]||netG[i])return false;sample(tx+.5,ty+.5);if(WET<=0)return false;return[1,-1,W,-W].some(d=>floorG[i+d]===14||biome[i+d]!==0)}
   if(!affordable(p)||!eraOk(p.era)||biome[i]===0)return false;
   sample(tx+.5,ty+.5);if(WET>-.004)return false;
@@ -1989,7 +1997,7 @@ function build(k,i){
 function unbuild(i){
   let k=0;if(roofG[i]){k=20;roofG[i]=0}else if(blockG[i]){k=blockG[i];if(k===5){dumpFurn(i);furn.delete(i);if(fuOpen===i)closeFurnace()}if(isMachK(k)){dumpMach(i);mach.delete(i);if(maOpen===i)closeMach()}blockG[i]=0}else if(netG[i]&32){k=53;netG[i]&=~32}else if(netG[i]&2){k=31;netG[i]&=~2}else if(netG[i]&MECH){k=netG[i]&8?32:netG[i]&16?33:30;if(k===33)levers.delete(i);netG[i]&=~MECH}else if(crops.has(i)){const c=crops.get(i);k={mandioca:41,milho:42,abobora:43}[c.sp];crops.delete(i)}else if(soilG[i]){k=40;soilG[i]=0}else if(floorG[i]){k=floorG[i]===14?14:10;floorG[i]=0}
   netDirty=true;
-  if(!k)return;const p=pieceByK(k),tx=i%W,ty=(i/W)|0;
+  if(!k){if(removablePlant(i))clearPlant(i);return}const p=pieceByK(k),tx=i%W,ty=(i/W)|0;
   p.cost.forEach(([id,n],j)=>give(id,n,(tx+.5)*T,(ty+.5)*T-HH,j));
   play('unbuild');miniStruct(i);save();updateBar();refreshBuildbar();
 }
@@ -2296,9 +2304,9 @@ function drawFishing(){const f=fishing,dx=f.x>P.x?1:-1,hx=P.x+dx*10,hy=P.y-30,tx
   ctx.strokeStyle='rgba(240,236,220,.75)';ctx.lineWidth=.9;ctx.beginPath();ctx.moveTo(tx,ty);ctx.quadraticCurveTo((tx+f.x)/2,Math.max(ty,f.y)+(f.hk>=0?-6:10),f.x,f.y-3+bob);ctx.stroke();
   ctx.strokeStyle='rgba(225,245,240,.6)';ctx.lineWidth=1;const rk=(time*1.2)%1;ctx.beginPath();ctx.ellipse(f.x,f.y,5+rk*9,2+rk*3,0,0,TAU);ctx.stroke();
   C2(ctx,f.x,f.y-3+bob,3.2,'#f4ece2');ctx.fillStyle='#d0302a';ctx.beginPath();ctx.arc(f.x,f.y-3+bob,3.2,Math.PI,0);ctx.fill()}
-function findWild(r){let b=null,bd=r;animals.forEach((a,k)=>{if(a.dead||a.tame||!SPEC[a.sp].farm)return;const d=Math.hypot(a.x-P.x,a.y-P.y);if(d<bd){bd=d;b=k}});return b}
+function findWild(r,tameOk){let b=null,bd=r;animals.forEach((a,k)=>{if(a.dead||(a.tame&&!tameOk)||!SPEC[a.sp].farm)return;const d=Math.hypot(a.x-P.x,a.y-P.y);if(d<bd){bd=d;b=k}});return b}
 function findTame(r){let b=null,bd=r;animals.forEach((a,k)=>{if(a.dead||!a.tame||!(a.prod>0))return;const d=Math.hypot(a.x-P.x,a.y-P.y);if(d<bd){bd=d;b=k}});return b}
-function lasso(k){const a=animals[k];if(!a||a.dead||a.tame||!(inv.laco>0))return;const ok=Math.random()<(a.sp==='galinha'?.6:SPEC[a.sp].lasso||.45);
+function lasso(k){const a=animals[k];if(!a||a.dead||!(inv.laco>0))return;if(a.tame){if(a.prod>0)farmCollect(k);a.dead=true;give(a.sp+'_viva',1,a.x,a.y-30,0);floats.push({x:a.x,y:a.y-56,text:'No laço · solte onde quiser',life:1.8});play('get');save();updateBar();return}const ok=Math.random()<(a.sp==='galinha'?.6:SPEC[a.sp].lasso||.45);
   if(ok){a.dead=true;a.rt=300;give(a.sp+'_viva',1,a.x,a.y-30,0);floats.push({x:a.x,y:a.y-56,text:'Laçou!',life:1.6});play('get');save();updateBar()}
   else{a.hurt=2.5;floats.push({x:a.x,y:a.y-40,text:'Escapou!',life:1.2});play('rustle')}}
 function release(id){if(!(inv[id]>0))return;const sp=id.split('_')[0],dv={down:[0,1],up:[0,-1],left:[-1,0],right:[1,0]}[P.dir];let x=P.x+dv[0]*30,y=P.y+dv[1]*30;if(!animalOk(x,y))x=P.x,y=P.y;
@@ -2328,6 +2336,19 @@ function stepFarmLife(dt){
     if(f.hk>=0){f.hk+=dt;if(f.hk>.8){floats.push({x:P.x,y:P.y-96,text:FISHN[Math.random()*FISHN.length|0],life:1.6});give('peixe_cru',1,P.x,P.y-70,0);fishing=null;play('get');save();updateBar()}}}
 }
 /* ---------- hazards: fire, mosquitoes · domestication · saplings · ambience ---------- */
+let veins=new Map(),loadedVeins=null;
+const VEINB={veioF:[2,5,7],veioC:[5,7,2],veioK:[7,8],pedreira:[5,7,2]},VEINS0={veioF:45,veioC:45,veioK:36,pedreira:80},VEINCOL={veioF:'#c4652f',veioC:'#5cc4aa',veioK:'#2c2925',pedreira:'#cfc9b8'};
+function veinOk(i){if(i<0||i>=W*H)return false;const tx=i%W,ty=(i/W)|0;if(tx<4||ty<4||tx>W-5||ty>H-5)return false;if(VIL&&VIL.tiles.has(i))return false;if(blockG[i]||floorG[i]||soilG[i]||netG[i]||roofG[i]||crops.has(i)||planted.has(i))return false;
+  const o=objAt[i];if(o&&(TYPES[o.type].big||o.type==='paredao'||TYPES[o.type].vein))return false;for(const d of[1,-1,W,-W,W+1,W-1,-W+1,-W-1]){if(biome[i+d]===0||blockG[i+d])return false}
+  if(Math.abs(tx-spawn.x)<7&&Math.abs(ty-spawn.y)<7)return false;for(const[j]of veins)if(Math.abs((j%W)-tx)<12&&Math.abs(((j/W)|0)-ty)<12)return false;return true}
+function setVein(i,type,stock){const tx=i%W,ty=(i/W)|0;objAt[i]={type,v:i%3,x:(tx+.5)*T,y:(ty+.5)*T+4,ph:0,i,stock};veins.set(i,{type,stock})}
+function placeVeins(){veins=new Map();if(loadedVeins){for(const[i,type,stock]of loadedVeins)if(TYPES[type]&&stock>0)setVein(i,type,stock);loadedVeins=null;return}
+  const r=mb((S^0x7e1a)>>>0);for(const[t,n]of[['veioF',3],['veioC',3],['veioK',2],['pedreira',3]])for(let k=0;k<n;k++){for(let q=0;q<5000;q++){const i=Math.floor(r()*W*H);if(VEINB[t].includes(biome[i])&&veinOk(i)){setVein(i,t,VEINS0[t]);break}}}}
+function veinDone(o){const t=TYPES[o.type];objAt[o.i]=null;changes[o.i]='x';veins.delete(o.i);const r=mb((S^Math.imul(o.i+1,2654435761))>>>0);let ni=-1;
+  for(let k=0;k<8000&&ni<0;k++){const q=Math.floor(r()*W*H);if(!VEINB[o.type].includes(biome[q])||!veinOk(q))continue;if(Math.hypot((q%W)-(o.i%W),((q/W)|0)-((o.i/W)|0))<24)continue;ni=q}
+  if(ni>=0)setVein(ni,o.type,VEINS0[o.type]);burst(o,24,false);
+  let where='';if(ni>=0){const dx=(ni%W)-P.x/T,dy=((ni/W)|0)-P.y/T,d=Math.round(Math.hypot(dx,dy)),a=Math.atan2(dy,dx),dirs=['leste','sudeste','sul','sudoeste','oeste','noroeste','norte','nordeste'];where=`Outro apareceu a uns ${d} passos, para o ${dirs[(Math.round(a/(Math.PI/4))+8)%8]}. Ele aparece no mapa quando você explorar a região.`}
+  toast('Jazida',`${t.name} esgotado`,where||'Outro veio vai aparecer em algum lugar do mapa.',null)}
 let planted=new Map(),gdrops=[],mosq=[],mosqOn=false,burnNear=false,hzT=0,fireT=150,mosqT=0,burnT=0;const fires=new Map(),burnt=new Map();
 function objChanged(i){if(!planted.has(i))return;const o=objAt[i];planted.set(i,!o?{t:null}:o.type==='stump'?{t:'stump',from:o.from,g:o.g||0}:o.type==='muda'?{t:'muda',to:o.grow,g:o.g}:{t:o.type})}
 function lured(a){const f=TAMEFOOD[a.sp];return!!f&&f.includes(equipped())}
@@ -2396,6 +2417,11 @@ function uproot(i){const o=objAt[i];if(!o||!UPROOT.has(o.type)||!(inv.enxada>0))
   for(let n=0;n<12;n++)parts.push({x:o.x+(Math.random()-.5)*24,y:o.y,z:4,vx:(Math.random()-.5)*70,vy:(Math.random()-.5)*20,vz:40+Math.random()*50,life:.6,c:n%3?'#6b4a2e':t.fx[0],s:2.2,r:0});
   wear.enxada=wearOf('enxada')-1;if(wear.enxada<=0){inv.enxada--;if(!inv.enxada)delete inv.enxada;wear.enxada=TOOLS.enxada.max;floats.push({x:P.x,y:P.y-80,text:'A enxada quebrou',life:1.8})}
   floats.push({x:o.x,y:o.y-56,text:'Arrancado pela raiz',life:1.5});play('plant');save();updateBar()}
+const CLEARABLE=new Set(['muda','ipeA','ipeR','jatoba','buriti','mangue']);
+function removablePlant(i){const o=objAt[i];return!!o&&!(VIL&&VIL.tiles.has(i))&&(UPROOT.has(o.type)||CLEARABLE.has(o.type))}
+function clearPlant(i){const o=objAt[i];if(!o)return;const t=TYPES[o.type]||{};objAt[i]=null;changes[i]='x';planted.set(i,{t:null,cap:1});if(t.big)miniPixel(i);
+  for(let n=0;n<14;n++)parts.push({x:o.x+(Math.random()-.5)*30,y:o.y,z:6+Math.random()*20,vx:(Math.random()-.5)*80,vy:(Math.random()-.5)*20,vz:30+Math.random()*50,life:.6,c:n%3?'#6b4a2e':(t.fx?t.fx[0]:'#5e9a40'),s:2.2,r:0});
+  floats.push({x:o.x,y:o.y-56,text:'Removido',life:1.2});play('unbuild');save()}
 function regaOk(i){if(i<0)return false;const tx=i%W,ty=(i/W)|0;if(Math.hypot((tx+.5)*T-P.x,(ty+.5)*T-P.y)>3.3*T)return false;for(let j=-1;j<=1;j++)for(let k=-1;k<=1;k++){const c=crops.get((ty+j)*W+tx+k);if(c&&!c.ripe&&c.w<4)return true}return false}
 function rega(i){if(!(inv.balde_agua>0)||i<0)return;inv.balde_agua--;if(!inv.balde_agua)delete inv.balde_agua;inv.balde=(inv.balde||0)+1;const tx=i%W,ty=(i/W)|0;let n=0;
   for(let j=-1;j<=1;j++)for(let k=-1;k<=1;k++){const q=(ty+j)*W+tx+k,c=crops.get(q);if(c){c.w=Math.max(c.w,4);n++}for(let z=0;z<3;z++)parts.push({x:(tx+k+.5)*T+(Math.random()-.5)*30,y:(ty+j+.5)*T,z:14,vx:(Math.random()-.5)*30,vy:(Math.random()-.5)*14,vz:20+Math.random()*30,life:.5,c:'#bfe3f0',s:2,r:0})}
@@ -2750,6 +2776,7 @@ function hit(o,want){
   const v=SP[o.type][o.v],ly=o.y+v.top;
   const rich=biome[o.i]===8&&t.tool==='picareta'&&o.type!=='rock';t.drops.forEach(([id,n],k)=>give(id,n*(rich&&k===0?2:1),o.x,ly,k));
   burst(o,14,!!t.tree);setTimeout(()=>play('get'),90);
+  if(t.vein){o.stock=(o.stock||VEINS0[o.type])-t.drops[0][1];const vn=veins.get(o.i);if(vn)vn.stock=o.stock;o.hp=null;if(o.stock<=0)veinDone(o);else if(o.stock<=t.drops[0][1]*3)floats.push({x:o.x,y:o.y-80,text:'O veio está quase no fim',life:1.8});save();updateBar();if(!bagEl.hidden)renderBag();return}
   if(t.pick||o.type==='colmeia'){o.picked=true;o.regrow=time+(o.type==='colmeia'?240:t.pick);o.hp=null}
   else if(t.tree&&o.type!=='stump'){objAt[o.i]=makeStump(o);changes[o.i]='s';miniPixel(o.i);planted.set(o.i,{t:'stump',from:o.type,g:0})}
   else if(REGROW[o.type]){objAt[o.i]=null;changes[o.i]='x';if(t.big)miniPixel(o.i);planted.set(o.i,{t:null,back:o.type,left:REGROW[o.type]*(.8+Math.random()*.4)})}
@@ -2862,7 +2889,7 @@ function update(dt){
     const eq=equipped(),dv={down:[0,1],up:[0,-1],left:[-1,0],right:[1,0]}[P.dir],ft=Math.floor((P.y+dv[1]*T*.85-4)/T)*W+Math.floor((P.x+dv[0]*T*.85)/T);
     foe=null;{const k=findPrey(64);if(k!=null){const a=animals[k];if(SPEC[a.sp].kind!=='prey'||a.mode==='chase')foe=k}}
     prey=null;farmI=-1;ACT=null;const boatK=P.boat?-1:nearBoat(115),npcK=nearNPC(84),tameK=findTame(64),feedK=eq&&!FOOD[eq]?findFeed(eq,85):eq?findFeed(eq,85):null;
-    const hitAct=(t,e)=>{if(t.type==='muda')return{v:'Muda',s:`${TYPES[t.grow].name.toLowerCase()} · ${Math.floor((t.g||0)*100)}%`,ok:false};const fam=TYPES[t.type].tool,tl=e&&TOOLS[e]&&TOOLS[e].fam===fam?e:null;return{v:TYPES[t.type].verb,s:tl?'com '+TOOLS[tl].short:'à mão',go:()=>{dispatch({t:'hit',i:t.i,tool:tl});act.swing=1;if(ST.energia<4)act.cd*=1.6}}};
+    const hitAct=(t,e)=>{if(t.type==='muda')return{v:'Muda',s:`${TYPES[t.grow].name.toLowerCase()} · ${Math.floor((t.g||0)*100)}%`,ok:false};const fam=TYPES[t.type].tool,tl=e&&TOOLS[e]&&TOOLS[e].fam===fam?e:null;return{v:TYPES[t.type].verb,s:(tl?'com '+TOOLS[tl].short:'à mão')+(TYPES[t.type].vein?` · ${Math.max(0,t.stock||0)} no veio`:''),go:()=>{dispatch({t:'hit',i:t.i,tool:tl});act.swing=1;if(ST.energia<4)act.cd*=1.6}}};
     const meleeAct=k=>({v:'Golpear',s:eq==='lanca'?'lança':'à mão',go:()=>{dispatch({t:'melee',a:k});act.swing=1;act.tool=eq==='lanca'?'lanca':null;act.cd=.5}});
     const fti=fpick.i>=0&&(mouseIn&&!coarse?time-fpick.t<3:time-fpick.t<6)&&farmPiece(eq)&&farmOk(farmPiece(eq),fpick.i)?fpick.i:ft;
     const farm=(k,v,sb,tl)=>{if(canPlace(pieceByK(k),fti)){farmI=fti;ACT={v,s:sb,self:1,go:()=>{dispatch({t:'build',k,i:fti});act.swing=1;act.tool=tl||null;act.cd=.4}}}};
@@ -2898,7 +2925,7 @@ function update(dt){
       else if((eq==='agua_rio'||eq==='agua_limpa')&&fireNear(90)>=0){const fi=fireNear(90),id=eq;ACT={v:'Apagar fogo',s:'jogar a água',go:()=>{dispatch({t:'douse',i:fi,id});act.swing=1;act.cd=.5}}}
       else if(feedK!=null){const a=animals[feedK],k=feedK,id=eq;ACT={v:'Oferecer',s:`${ITEMS[id].toLowerCase()} · ${a.trust||0}/${TRUSTN[a.sp]}`,go:()=>{dispatch({t:'offer',a:k,id});act.cd=.6}}}
       else if(SAPL[eq]){if(farmOk('sow',fti)){farmI=fti;const id=eq;ACT={v:'Plantar muda',s:ITEMS[id].toLowerCase(),self:1,go:()=>{dispatch({t:'sow',id,i:fti});act.cd=.5}}}}
-      else if(eq==='laco'){const k=findWild(95);if(k!=null)ACT={v:'Laçar',s:SPEC[animals[k].sp].name.toLowerCase(),go:()=>{dispatch({t:'lasso',a:k});act.swing=1;act.cd=.9}}}
+      else if(eq==='laco'){const k=findWild(95,true);if(k!=null)ACT={v:'Laçar',s:animals[k].tame?`${SPEC[animals[k].sp].name.toLowerCase()} · levar no laço`:SPEC[animals[k].sp].name.toLowerCase(),go:()=>{dispatch({t:'lasso',a:k});act.swing=1;act.cd=.9}}}
       else if(isLive(eq)){const id=eq;ACT={v:'Soltar',s:'aqui, para criar',self:1,go:()=>{dispatch({t:'release',id});act.cd=.7}}}
       else if(FOOD[eq]){const id=eq;ACT={v:id==='emplastro'?'Aplicar':RETURNS[id]||id==='polpa'?'Beber':'Comer',s:foodText(id),self:1,go:()=>{dispatch({t:'eat',id});act.cd=.6}}}
       else if(eq==='cabaca'){const fs=fillSource();if(fs)ACT={v:'Encher',s:fs==='limpa'?'água limpa':'água do rio',self:1,go:()=>{dispatch({t:'fill'});act.cd=.5}}}}
@@ -3498,6 +3525,7 @@ function drawMap(x,S0,big,L,Tp,Rr,B2){
   if(bedSpawn>=0&&blockG[bedSpawn]===6){x.fillStyle='#9fd3e6';x.strokeStyle='#1d1606';x.lineWidth=1.5;x.beginPath();x.arc(X(bedSpawn%W+.5),Y((bedSpawn/W|0)+.5),big?5:6,0,TAU);x.fill();x.stroke()}
   if(wp>=0){let wx=X(wp%W+.5),wy=Y((wp/W|0)+.5);const r=big?9:10;wx=clamp(wx,r,S0-r);wy=clamp(wy,r*2,S0);x.fillStyle='#e0604a';x.strokeStyle='#1d1606';x.lineWidth=1.5;x.beginPath();x.moveTo(wx,wy);x.lineTo(wx-r*.6,wy-r);x.arc(wx,wy-r,r*.6,Math.PI,0);x.closePath();x.fill();x.stroke()}
   if(VIL&&(big||1)&&explored[VIL.ci]){const vx=X(VIL.cx+.5),vy=Y(VIL.cy+.5),r=big?9:8;x.fillStyle='#e8d6a8';x.strokeStyle='#1d1606';x.lineWidth=1.5;x.beginPath();x.moveTo(vx-r,vy+r*.6);x.lineTo(vx-r,vy-r*.1);x.lineTo(vx,vy-r);x.lineTo(vx+r,vy-r*.1);x.lineTo(vx+r,vy+r*.6);x.closePath();x.fill();x.stroke();if(big){x.font='700 13px "Chakra Petch", sans-serif';x.textAlign='center';x.lineWidth=3;x.strokeStyle='rgba(13,21,17,.9)';x.strokeText(VIL.name,vx,vy-r-6);x.fillStyle='#efe8d3';x.fillText(VIL.name,vx,vy-r-6)}}
+  for(const[i,v]of veins){if(!explored[i])continue;const vx=X(i%W+.5),vy=Y((i/W|0)+.5),r=big?7:6;if(!big&&(vx<0||vy<0||vx>S0||vy>S0))continue;x.fillStyle=VEINCOL[v.type];x.strokeStyle='#efe8d3';x.lineWidth=1.5;x.beginPath();x.moveTo(vx,vy-r);x.lineTo(vx+r,vy);x.lineTo(vx,vy+r);x.lineTo(vx-r,vy);x.closePath();x.fill();x.stroke()}
   for(const o of others.values()){x.fillStyle=MPCOL[o.c%6][1];x.strokeStyle='#1d1606';x.lineWidth=1.5;x.beginPath();x.arc(X(o.x/T),Y(o.y/T),big?6:7,0,TAU);x.fill();x.stroke()}
   const px=X(P.x/T),py=Y(P.y/T),an={right:0,down:Math.PI/2,left:Math.PI,up:-Math.PI/2}[P.dir],r=big?8:9;
   x.save();x.translate(px,py);x.rotate(an);x.fillStyle='#f2c230';x.strokeStyle='#1d1606';x.lineWidth=1.5;x.beginPath();x.moveTo(r,0);x.lineTo(-r*.7,-r*.7);x.lineTo(-r*.35,0);x.lineTo(-r*.7,r*.7);x.closePath();x.fill();x.stroke();x.restore();
