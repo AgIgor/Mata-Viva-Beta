@@ -320,6 +320,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(-
   <button class="btn" id="snd" type="button"><span class="k">Som</span><span id="sndv">Ligado</span></button>
   <button class="btn" id="spr" type="button"><span class="k">Coleção</span>Diário</button>
   <button class="btn" id="mpBtn" type="button"><span class="k" id="mpk">Multiplayer</span><span id="mpv">Jogar junto</span></button>
+  <button class="btn" id="mvBtn" type="button" aria-pressed="false"><span class="k">Obras</span><span id="mvv">Mover</span></button>
   <button class="btn" id="rmBtn" type="button" aria-pressed="false"><span class="k">Obras</span><span id="rmv">Desmontar</span></button>
 </div>
 <div id="tradePanel" role="dialog" aria-modal="true" aria-labelledby="trName" hidden>
@@ -395,7 +396,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(-
       <p>Tudo fica salvo neste navegador, sozinho, a cada poucos segundos.</p>
       <button class="btn" type="button" data-tback>Voltar</button>
     </div>
-    <p class="ttl-ver">Versão 1.29 · teste</p>
+    <p class="ttl-ver">Versão 1.30 · teste</p>
   </div>
 </div>
 <div id="pause" hidden role="dialog" aria-label="Pausa">
@@ -1107,10 +1108,11 @@ const PIECES=[
   {k:55,id:'eforno',era:'eletrica',name:'Forno elétrico',cost:[['pedra',10],['bobina',1],['barra_ferro',2]],desc:'Funde minério sem lenha nem carvão, com 3 de energia.'},
   {k:56,id:'irrigador',era:'eletrica',name:'Irrigador',cost:[['cano',2],['bobina',1],['barra_cobre',1]],desc:'Rega as plantas a até 3 casas e faz crescer 50% mais rápido. Usa 1 de energia.'},
   {k:57,id:'radio',era:'eletrica',name:'Rádio',cost:[['bobina',3],['barra_cobre',4],['barra_ferro',4],['tabua',4],['lampada',2]],desc:'Precisa de 6 de energia. Transmita para tentar contato com o mundo lá fora.'},
+  {k:98,id:'mover',era:'pedra',name:'Mover',cost:[],desc:'Toque numa construção e depois no lugar novo. Ela vai inteira, com tudo o que tinha dentro (baú, fornalha, máquinas, cocho).'},
   {k:99,id:'remove',era:'pedra',name:'Desmontar',cost:[],desc:'Remove a peça mais alta do lugar e devolve todo o material. Também tira plantas e árvores pela raiz (sem dar madeira nem frutos), e nada nasce ali sozinho depois.'}
 ];
 const pieceByK=k=>PIECES.find(p=>p.k===k);
-const kitOk=p=>!!p&&p.k!==99&&p.k!==40&&!CROPK[p.k]&&p.k!==45&&p.k!==46&&p.k!==31&&p.k!==53,kitId=p=>'k_'+p.id,kitPiece=id=>id&&id.startsWith('k_')?PIECES.find(p=>'k_'+p.id===id):null;
+const kitOk=p=>!!p&&p.k!==99&&p.k!==98&&p.k!==40&&!CROPK[p.k]&&p.k!==45&&p.k!==46&&p.k!==31&&p.k!==53,kitId=p=>'k_'+p.id,kitPiece=id=>id&&id.startsWith('k_')?PIECES.find(p=>'k_'+p.id===id):null;
 function registerKits(){for(const p of PIECES)if(kitOk(p)){ITEMS[kitId(p)]=p.name;SOURCES[kitId(p)]='Crie no menu Construir';ITEM_ORDER.push(kitId(p))}}
 let floorG=new Uint8Array(W*H),blockG=new Uint8Array(W*H),roofG=new Uint8Array(W*H),loadedBuild=null;
 const isWallK=k=>k===1||k===2;
@@ -1404,6 +1406,7 @@ function buildPieceIcons(){
     else if(p.k===54||p.k===57){x.translate(24,46);x.scale(.4,.4);drawStructAt(x,p.k,0,0,-1,0)}
     else if(p.k>=47&&p.k<=56){x.translate(24,38);x.scale(.82,.82);drawStructAt(x,p.k,0,0,-1,0)}
     else if(p.k===20){x.translate(6,4);x.scale(.75,.75);x.drawImage(THATCH.c,0,0,48,48);x.drawImage(FRINGE.c,0,44,48,14)}
+    else if(p.k===98){x.strokeStyle='#f2c230';x.lineWidth=3;x.lineCap='round';x.lineJoin='round';x.beginPath();x.moveTo(24,8);x.lineTo(24,40);x.moveTo(8,24);x.lineTo(40,24);x.moveTo(19,13);x.lineTo(24,8);x.lineTo(29,13);x.moveTo(19,35);x.lineTo(24,40);x.lineTo(29,35);x.moveTo(13,19);x.lineTo(8,24);x.lineTo(13,29);x.moveTo(35,19);x.lineTo(40,24);x.lineTo(35,29);x.stroke()}
     else{x.strokeStyle='#eb9474';x.lineWidth=3;x.lineCap='round';x.beginPath();x.moveTo(14,14);x.lineTo(34,34);x.moveTo(34,14);x.lineTo(14,34);x.stroke();x.lineWidth=1.6;x.beginPath();x.arc(24,24,17,0,TAU);x.stroke()}
     ICON['p_'+p.id]=c.toDataURL('image/png')}
 }
@@ -1770,6 +1773,7 @@ const gal=document.getElementById('gallery');
 const bagEl=document.getElementById('bag'),slotsEl=document.getElementById('slots'),bagN=document.getElementById('bagN'),itemsEl=document.getElementById('items'),bagSum=document.getElementById('bagSum');
 const craftEl=document.getElementById('craft'),recipesEl=document.getElementById('recipes'),craftBtn=document.getElementById('craftBtn');
 const actBtn=document.getElementById('act'),actV=document.getElementById('actV'),actK=document.getElementById('actK'),act2Btn=document.getElementById('act2'),act2={fire:false};
+document.getElementById('mvBtn').addEventListener('click',()=>{audio();setBuild(bmode&&bmode.k===98?null:pieceByK(98))});
 document.getElementById('rmBtn').addEventListener('click',()=>{audio();setBuild(bmode&&bmode.k===99?null:pieceByK(99))});
 let altKey='';document.getElementById('altBox').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-j]');if(!b)return;e.preventDefault();e.stopPropagation();const a=ALTS[+b.dataset.j];if(a&&a.ok!==false){audio();a.go()}});
 document.getElementById('actSw').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();audio();cycleAct()});
@@ -1980,17 +1984,18 @@ const affordable=p=>(kitOk(p)&&inv[kitId(p)]>0)||p.cost.every(([id,n])=>(inv[id]
 const matMany=p=>p.cost.length?Math.min(...p.cost.map(([id,n])=>Math.floor((inv[id]||0)/n))):0,howMany=p=>(kitOk(p)?inv[kitId(p)]||0:0)+matMany(p);
 let bRot='H';
 function setBuild(p){
+  movSrc=-1;
   if(!p&&equip&&equip.startsWith('k_'))equip=null;
-  bmode=p;{const rb=document.getElementById('rmBtn');if(rb){const on=!!p&&p.k===99;rb.setAttribute('aria-pressed',String(on));rb.classList.toggle('on',on);document.getElementById('rmv').textContent=on?'Ligado · sair':'Desmontar'}}pick={i:-1,t:-99};buildbar.hidden=!p;document.getElementById('bbRot').hidden=!(p&&(p.k===30||p.k===34||p.k===35));if(p&&(p.k===34||p.k===35)){bDir={right:0,down:1,left:2,up:3}[P.dir];rotLabel()}else if(p&&p.k===30)rotLabel();
+  bmode=p;{const rb=document.getElementById('rmBtn');if(rb){const on=!!p&&p.k===99;rb.setAttribute('aria-pressed',String(on));rb.classList.toggle('on',on);document.getElementById('rmv').textContent=on?'Ligado · sair':'Desmontar'}const mb2=document.getElementById('mvBtn');if(mb2){const on=!!p&&p.k===98;mb2.setAttribute('aria-pressed',String(on));mb2.classList.toggle('on',on);document.getElementById('mvv').textContent=on?'Ligado · sair':'Mover'}}pick={i:-1,t:-99};buildbar.hidden=!p;document.getElementById('bbRot').hidden=!(p&&(p.k===30||p.k===34||p.k===35));if(p&&(p.k===34||p.k===35)){bDir={right:0,down:1,left:2,up:3}[P.dir];rotLabel()}else if(p&&p.k===30)rotLabel();
   if(p){hint.classList.add('gone');refreshBuildbar()}
 }
 function refreshBuildbar(){if(!bmode)return;document.getElementById('bbImg').src=ICON['p_'+bmode.id];document.getElementById('bbName').textContent=bmode.name;
-  document.getElementById('bbInfo').textContent=bmode.k===40?(inv.enxada>0?`Enxada: ${wearOf('enxada')} usos · ${coarse?'toque':'clique'} no chão`:'Sem enxada'):bmode.k===99?(coarse?'Toque numa peça e segure Remover':'Clique numa peça para remover'):(coarse?`Dá para fazer ${howMany(bmode)} · toque no chão`:`Dá para fazer ${howMany(bmode)} · clique no chão`)}
+  document.getElementById('bbInfo').textContent=bmode.k===40?(inv.enxada>0?`Enxada: ${wearOf('enxada')} usos · ${coarse?'toque':'clique'} no chão`:'Sem enxada'):bmode.k===99?(coarse?'Toque numa peça e segure Remover':'Clique numa peça para remover'):bmode.k===98?(movSrc<0?(coarse?'Toque na construção que quer mover':'Clique na construção que quer mover'):`Levando: ${(pieceByK(blockG[movSrc])||{}).name||''} · toque no lugar novo`):(coarse?`Dá para fazer ${howMany(bmode)} · toque no chão`:`Dá para fazer ${howMany(bmode)} · clique no chão`)}
 function renderPieces(){
   const grp=[['pedra','Era da pedra · abrigo e oficina'],['sitio','Sítio · pesca, abelhas e criação'],['cobre','Era do cobre · força da água'],['ferro','Era do ferro · carvão e bombas'],['vapor','Era do vapor'],['eletrica','Era elétrica · dínamo e luz']];
-  const card=p=>{const lk=!eraOk(p.era),noHoe=p.k===40&&!(inv.enxada>0),ok=p.k===99||(!lk&&!noHoe&&affordable(p));
-    return`<div class="rec"><div class="rec-h"><img src="${ICON['p_'+p.id]}" alt=""${lk?' style="opacity:.45"':''}><div><b>${p.name}</b><span>${p.k===99?'Sem custo':lk?ERA_HINT[p.era]:p.k===40?(inv.enxada>0?`Enxada: ${wearOf('enxada')} usos`:'Crie uma enxada primeiro'):`Dá para fazer ${howMany(p)}`}</span></div></div><p>${p.desc}</p>${p.cost.length?`<div class="need">${p.cost.map(([id,n])=>chip(id,n)).join('')}</div>`:''}${kitOk(p)&&!lk?`<div class="btnrow"><button class="btn" type="button" data-make="${p.k}"${matMany(p)>0?'':' disabled'}>${matMany(p)>0?'Criar · vai para a mochila':'Faltam materiais'}</button>${inv[kitId(p)]>0?`<button class="btn ghostbtn" type="button" data-piece="${p.k}">Colocar · tem ${inv[kitId(p)]}</button>`:''}</div>`:`<button class="btn" type="button" data-piece="${p.k}"${ok?'':' disabled'}>${ok?'Escolher':lk?'Bloqueada':noHoe?'Precisa de enxada':'Faltam materiais'}</button>`}</div>`};
-  piecesEl.innerHTML=grp.map(([e,t])=>sec(e==='plant'||e==='sitio'||eraOk(e)?t:t+' · bloqueada')+PIECES.filter(p=>e==='plant'||e==='sitio'?p.grp===e:p.era===e&&p.k!==99&&!p.grp).map(card).join('')).join('')+sec('Ferramenta')+card(pieceByK(99));
+  const card=p=>{const lk=!eraOk(p.era),noHoe=p.k===40&&!(inv.enxada>0),ok=p.k===99||p.k===98||(!lk&&!noHoe&&affordable(p));
+    return`<div class="rec"><div class="rec-h"><img src="${ICON['p_'+p.id]}" alt=""${lk?' style="opacity:.45"':''}><div><b>${p.name}</b><span>${p.k===99||p.k===98?'Sem custo':lk?ERA_HINT[p.era]:p.k===40?(inv.enxada>0?`Enxada: ${wearOf('enxada')} usos`:'Crie uma enxada primeiro'):`Dá para fazer ${howMany(p)}`}</span></div></div><p>${p.desc}</p>${p.cost.length?`<div class="need">${p.cost.map(([id,n])=>chip(id,n)).join('')}</div>`:''}${kitOk(p)&&!lk?`<div class="btnrow"><button class="btn" type="button" data-make="${p.k}"${matMany(p)>0?'':' disabled'}>${matMany(p)>0?'Criar · vai para a mochila':'Faltam materiais'}</button>${inv[kitId(p)]>0?`<button class="btn ghostbtn" type="button" data-piece="${p.k}">Colocar · tem ${inv[kitId(p)]}</button>`:''}</div>`:`<button class="btn" type="button" data-piece="${p.k}"${ok?'':' disabled'}>${ok?'Escolher':lk?'Bloqueada':noHoe?'Precisa de enxada':'Faltam materiais'}</button>`}</div>`};
+  piecesEl.innerHTML=grp.map(([e,t])=>sec(e==='plant'||e==='sitio'||eraOk(e)?t:t+' · bloqueada')+PIECES.filter(p=>e==='plant'||e==='sitio'?p.grp===e:p.era===e&&p.k!==99&&p.k!==98&&!p.grp).map(card).join('')).join('')+sec('Ferramentas')+card(pieceByK(98))+card(pieceByK(99));
 }
 function makeKit(k){const p=pieceByK(k);if(!kitOk(p)||matMany(p)<1)return;for(const[id,n]of p.cost){inv[id]-=n;if(inv[id]<=0)delete inv[id]}inv[kitId(p)]=(inv[kitId(p)]||0)+1;gotItem(kitId(p),1);
   floats.push({x:P.x,y:P.y-72,text:`+1 ${p.name} na mochila`,life:1.6});play('craft');save();updateBar();renderPieces();if(!bagEl.hidden)renderBag()}
@@ -2004,12 +2009,20 @@ function rotLabel(){document.getElementById('bbRot').textContent=bmode&&(bmode.k
 function rotate(){if(bmode&&(bmode.k===34||bmode.k===35))bDir=(bDir+1)%4;else bRot=bRot==='H'?'V':'H';rotLabel()}
 document.getElementById('bbRot').addEventListener('click',rotate);
 document.getElementById('bbExit').addEventListener('click',()=>setBuild(null));
+let movSrc=-1,MOVING=false;
+function canMoveTo(from,to){const k=blockG[from];if(!k||to===from)return false;blockG[from]=0;MOVING=true;let ok=false;try{ok=canPlace(pieceByK(k),to)}finally{MOVING=false;blockG[from]=k}return ok}
+function moveStruct(from,to){if(!canMoveTo(from,to))return false;const k=blockG[from],m=mach.get(from),f=furn.get(from);
+  if(fuOpen===from)closeFurnace();if(maOpen===from)closeMach();if(typeof chOpen!=='undefined'&&chOpen===from)closeChest();if(stationI===from){craftEl.hidden=true;stationI=-1}
+  blockG[from]=0;mach.delete(from);furn.delete(from);blockG[to]=k;if(m)mach.set(to,m);if(f)furn.set(to,f);if(bedSpawn===from)bedSpawn=to;netDirty=true;
+  for(const q of[from,to]){const tx=q%W,ty=(q/W)|0;for(let n=0;n<6;n++)parts.push({x:(tx+.5)*T+(Math.random()-.5)*30,y:(ty+.5)*T,z:4,vx:(Math.random()-.5)*50,vy:(Math.random()-.5)*20,vz:30+Math.random()*40,life:.5,c:n%2?'#c9a27a':'#8c644b',s:2,r:0});miniStruct(q);if(!blockG[q])miniPixel(q)}
+  play('build');save();updateBar();return true}
 function canPlace(p,i){if(VIL&&VIL.tiles.has(i))return false;
   if(!p||i<0)return false;const tx=i%W,ty=(i/W)|0;if(tx<1||ty<1||tx>W-2||ty>H-2)return false;
   if(Math.hypot((tx+.5)*T-P.x,(ty+.5)*T-P.y)>3.3*T)return false;
+  if(p.k===98){if(movSrc<0)return!!blockG[i]&&!!pieceByK(blockG[i])&&!(VIL&&VIL.tiles.has(i));return canMoveTo(movSrc,i)}
   if(p.k===99)return!!(roofG[i]||blockG[i]||floorG[i]||netG[i]||soilG[i])||boatAtTile(i)>=0||removablePlant(i);
   if(p.k===14){if(!affordable(p)||floorG[i]||blockG[i]||netG[i])return false;sample(tx+.5,ty+.5);if(WET<=0)return false;return[1,-1,W,-W].some(d=>floorG[i+d]===14||biome[i+d]!==0)}
-  if(!affordable(p)||!eraOk(p.era)||biome[i]===0)return false;
+  if(!(MOVING||affordable(p))||!eraOk(p.era)||biome[i]===0)return false;
   sample(tx+.5,ty+.5);if(WET>-.004)return false;
   if(p.k===20)return!roofG[i]&&!!(floorG[i]||isWallK(blockG[i]));
   if(p.k===10)return!floorG[i]&&!objAt[i];
@@ -2025,7 +2038,7 @@ function canPlace(p,i){if(VIL&&VIL.tiles.has(i))return false;
   if(p.k!==2&&p.k!==50&&p.k!==47&&p.k!==34&&p.k!==35){const x0=tx*T,y0=ty*T;if(P.x>x0-8&&P.x<x0+T+8&&P.y>y0-5&&P.y<y0+T+5)return false}
   return true;
 }
-function placeAt(i){if(bmode&&bmode.k===99){const bi=boatAtTile(i);if(bi>=0){dispatch({t:'boatUp',b:bi});act.swing=1;return}}if(bmode&&canPlace(bmode,i)){dispatch(bmode.k===99?{t:'unbuild',i}:{t:'build',k:bmode.k,i});act.swing=1;act.tool=null}}
+function placeAt(i){if(bmode&&bmode.k===98){if(movSrc<0){if(canPlace(bmode,i)){movSrc=i;play('rustle');refreshBuildbar()}}else if(i===movSrc){movSrc=-1;refreshBuildbar()}else if(canPlace(bmode,i)){dispatch({t:'move',from:movSrc,to:i});movSrc=-1;act.swing=1;refreshBuildbar()}return}if(bmode&&bmode.k===99){const bi=boatAtTile(i);if(bi>=0){dispatch({t:'boatUp',b:bi});act.swing=1;return}}if(bmode&&canPlace(bmode,i)){dispatch(bmode.k===99?{t:'unbuild',i}:{t:'build',k:bmode.k,i});act.swing=1;act.tool=null}}
 function build(k,i){
   const p=pieceByK(k);if(!canPlace(p,i))return;stats.built[k]=(stats.built[k]||0)+1;
   if(kitOk(p)&&inv[kitId(p)]>0){inv[kitId(p)]--;if(!inv[kitId(p)])delete inv[kitId(p)]}else for(const[id,n]of p.cost){inv[id]-=n;if(inv[id]<=0)delete inv[id]}
@@ -2596,7 +2609,7 @@ function doTrade(v,side,k){const n=villagers[v];if(!n)return;const d=n.def,o=(si
   vstate.u[`${d.id}:${side}:${k}`]=(vstate.u[`${d.id}:${side}:${k}`]||0)+1;stats.trades++;play('get');save();updateBar();renderTrade()}
 /* ---------- multiplayer: live room (claude.ai) with same-browser fallback ---------- */
 const MPCOL=[['#5f6e3b','#9fbf5e','#434f29'],['#3b5f8a','#6fa0dc','#2a4566'],['#8a3b3b','#e07a6a','#662a2a'],['#7a5aa0','#b896e0','#5a3e7a'],['#3b8a7a','#6fd4be','#2a6658'],['#a0782a','#f2c230','#7a5a18']];
-const REPL=new Set(['uproot','pump','rega','eforno','radio','hit','build','unbuild','fu','ma','reap','plot','lever','release','collect','feed','sow','douse','dig','ch']);
+const REPL=new Set(['move','uproot','pump','rega','eforno','radio','hit','build','unbuild','fu','ma','reap','plot','lever','release','collect','feed','sow','douse','dig','ch']);
 const DIR4=['down','up','left','right'],MPCH=1900;
 const mp={uid:Math.random().toString(36).slice(2,10),joining:false,on:false,host:false,room:null,src:'',code:'',ready:false,seq:0,out:[],seen:new Map(),snap:null,sentIds:new Set(),parts:{},hostPeer:null,t:0,ct:0,myC:0,prevSeed:null,unsub:null,lastRx:new Map()};
 const others=new Map(),mpEl=document.getElementById('mpPanel');
@@ -2764,6 +2777,7 @@ function applyCmd(cmd){
   else if(cmd.t==='rega')rega(cmd.i);
   else if(cmd.t==='pump')pump(cmd.i);
   else if(cmd.t==='uproot')uproot(cmd.i);
+  else if(cmd.t==='move')moveStruct(cmd.from,cmd.to);
   else if(cmd.t==='shoot')shoot(cmd.a);
   else if(cmd.t==='melee')melee(cmd.a);
   else if(cmd.t==='equip')setEquip(cmd.id);
@@ -3182,7 +3196,9 @@ function render(){
     if(bmode.k===59&&bvalid){ctx.fillStyle='rgba(216,68,46,.08)';ctx.fillRect(X-MARCOR*T,Y-MARCOR*T,T*(MARCOR*2+1),T*(MARCOR*2+1));ctx.strokeStyle='rgba(216,68,46,.6)';ctx.lineWidth=1.5;ctx.setLineDash([8,6]);ctx.strokeRect(X-MARCOR*T+1,Y-MARCOR*T+1,T*(MARCOR*2+1)-2,T*(MARCOR*2+1)-2);ctx.setLineDash([])}
     if(bmode.k===31&&bvalid){ctx.fillStyle='rgba(90,170,230,.13)';ctx.fillRect(X-PIPER*T,Y-PIPER*T,T*(PIPER*2+1),T*(PIPER*2+1));ctx.strokeStyle='rgba(120,190,240,.55)';ctx.lineWidth=1.2;ctx.strokeRect(X-PIPER*T+1,Y-PIPER*T+1,T*(PIPER*2+1)-2,T*(PIPER*2+1)-2)}
     ctx.fillStyle=`rgba(${col},.22)`;ctx.fillRect(X,Y,T,T);ctx.strokeStyle=`rgba(${col},.85)`;ctx.lineWidth=1.5;ctx.setLineDash([6,4]);ctx.strokeRect(X+1,Y+1,T-2,T-2);ctx.setLineDash([]);
-    if(bmode.k!==99&&bvalid){ctx.globalAlpha=.55;const cx=X+24,cy=Y+24;
+    if(bmode.k===98&&movSrc>=0){const sx=(movSrc%W)*T,sy=((movSrc/W)|0)*T;ctx.strokeStyle='rgba(242,194,48,.9)';ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.strokeRect(sx+2,sy+2,T-4,T-4);ctx.setLineDash([])}
+    if(bmode.k===98&&movSrc>=0&&bvalid){ctx.globalAlpha=.55;const k2=blockG[movSrc];if(isWallK(k2)){const c=wallConn(bcur);k2===1?drawWall(ctx,X+24,Y+24,c):drawDoor(ctx,X+24,Y+24,c,false)}else drawStructAt(ctx,k2,X+24,Y+24,bcur,time);ctx.globalAlpha=1}
+    else if(bmode.k!==99&&bmode.k!==98&&bvalid){ctx.globalAlpha=.55;const cx=X+24,cy=Y+24;
       if(bmode.k===10){ctx.drawImage(FLOOR[0].c,X,Y,48,48)}else if(bmode.k===14){const o=floorG[bcur];floorG[bcur]=14;drawBridge(ctx,tx,ty);floorG[bcur]=o}else if(bmode.k===40){R2(ctx,X+3,Y+4,42,41,5,'#5a3d25')}else if(CROPK[bmode.k]){drawCrop(ctx,X+24,Y+30,{sp:CROPK[bmode.k],g:.3,w:1},time,mb(bcur))}else if(bmode.k===45){}else if(bmode.k===30||bmode.k===31||bmode.k===32||bmode.k===33){const b=netG[bcur];netG[bcur]|=({30:bRot==='H'?1:4,31:2,32:8,33:16})[bmode.k];drawNet(ctx,tx,ty);netG[bcur]=b}else if(bmode.k===20){drawRoof(ctx,tx,ty)}else if(bmode.k===34){drawBelt(ctx,X+24,Y+24,bDir,1,time)}else if(bmode.k===35){drawArm(ctx,X+24,Y+24,bDir,0,null);ctx.strokeStyle='#f2c230';ctx.lineWidth=2.5;const ax=X+24+DV[bDir][0]*18,ay=Y+24+DV[bDir][1]*18;ctx.beginPath();ctx.moveTo(X+24,Y+24);ctx.lineTo(ax,ay);ctx.stroke()}
       else if(isWallK(bmode.k)){const c=wallConn(bcur);bmode.k===1?drawWall(ctx,cx,cy,c):drawDoor(ctx,cx,cy,c,false)}
       else drawStructAt(ctx,bmode.k,cx,cy,bcur,time);ctx.globalAlpha=1}}
@@ -3247,7 +3263,7 @@ function render(){
     if(ST.molhado>75)cs.push(['wet','Encharcado']);else if(ST.molhado>30)cs.push(['wet','Molhado']);if(ST.energia<15)cs.push(['bad','Exausto']);
     const ch=cs.map(([c,t])=>`<span class="${c}">${t}</span>`).join('');if(chipsEl.innerHTML!==ch)chipsEl.innerHTML=ch;
     let verb,sub;
-    if(bmode){verb=bmode.k===99?'Remover':'Construir';sub=bvalid?(coarse?'toque/segure':'clique ou E'):(Math.hypot(((bcur%W)+.5)*T-P.x,(((bcur/W)|0)+.5)*T-P.y)>3.3*T?'longe demais':bmode.k!==99&&!affordable(bmode)?'sem material':'lugar ocupado')}
+    if(bmode){verb=bmode.k===99?'Remover':bmode.k===98?(movSrc<0?'Pegar':'Colocar aqui'):'Construir';sub=bmode.k===98&&!bvalid?(movSrc<0?'escolha uma construção':'lugar ocupado ou longe'):bvalid?(coarse?'toque/segure':'clique ou E'):(Math.hypot(((bcur%W)+.5)*T-P.x,(((bcur/W)|0)+.5)*T-P.y)>3.3*T?'longe demais':bmode.k!==99&&!affordable(bmode)?'sem material':'lugar ocupado')}
     else if(ACT){verb=ACT.v;sub=ACT.s}
     else{const e=equipped();verb=e&&FOOD[e]?'Comer':'Coletar';sub=e?ITEMS[e].toLowerCase():'mão vazia'}
     if(actV.textContent!==verb)actV.textContent=verb;
