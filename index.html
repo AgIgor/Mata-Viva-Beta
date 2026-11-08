@@ -394,7 +394,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(-
       <p>Tudo fica salvo neste navegador, sozinho, a cada poucos segundos.</p>
       <button class="btn" type="button" data-tback>Voltar</button>
     </div>
-    <p class="ttl-ver">Versão 1.27 · teste</p>
+    <p class="ttl-ver">Versão 1.28 · teste</p>
   </div>
 </div>
 <div id="pause" hidden role="dialog" aria-label="Pausa">
@@ -429,7 +429,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(-
 
 <div id="craft" hidden role="dialog" aria-label="Criar">
   <div class="sheet">
-    <div class="sheet-h"><div><h2>Criar</h2><span id="craftSub"></span></div><button class="btn" id="craftClose" type="button">Fechar</button></div>
+    <div class="sheet-h"><div><h2 id="craftTitle">Criar</h2><span id="craftSub"></span></div><button class="btn" id="craftClose" type="button">Fechar</button></div>
     <div class="recipes" id="recipes"></div>
   </div>
 </div>
@@ -1064,7 +1064,7 @@ const PIECES=[
   {k:20,id:'roof',era:'pedra',name:'Telhado de palha',cost:[['fibra',2],['folhas',2]],desc:'Vai sobre piso, parede ou porta. Debaixo dele você fica abrigado da chuva.'},
   {k:3,id:'fire',era:'pedra',name:'Fogueira',cost:[['pedra',4],['madeira',2]],desc:'Luz e calor. Apaga na chuva se não tiver telhado em cima.'},
   {k:6,id:'bed',era:'pedra',name:'Cama de folhas',cost:[['folhas',6],['fibra',2],['madeira',2]],desc:'À noite, durma para pular até o amanhecer. Vira seu ponto de retorno.'},
-  {k:4,id:'bench',era:'pedra',name:'Bancada de trabalho',cost:[['madeira',6],['pedra',2],['corda',1]],desc:'Perto dela a tela Criar libera ferramentas de metal e reparos.'},
+  {k:4,id:'bench',era:'pedra',name:'Bancada de trabalho',cost:[['madeira',6],['pedra',2],['corda',1]],desc:'Toque nela para abrir o menu: ferramentas de metal, roupas de couro, armas e reparos.'},
   {k:5,id:'furnace',era:'pedra',name:'Fornalha de pedra',cost:[['pedra',10],['madeira',2]],desc:'Derrete minério em barras queimando madeira. O cobre derrete direto; o ferro precisa de um fole ao lado.'},
   {k:14,id:'ponte',era:'pedra',name:'Ponte de madeira',cost:[['madeira',3],['corda',1]],desc:'Vai sobre a água, começando da margem. Atravesse rios e lagos sem se molhar.'},
   {k:15,id:'bau',era:'pedra',name:'Baú',cost:[['madeira',6],['corda',1]],desc:'Guarda até 200 itens fora da mochila. Esteiras e braços mecânicos põem e tiram coisas dele.'},
@@ -1790,7 +1790,7 @@ function thingAt(sx,sy){const wx=(sx-vw/2)/zoom+cam.x,wy=(sy-vh/2)/zoom+cam.y;
   for(let j=0;j<=3;j++)for(let i=-1;i<=1;i++){const q=(ty+j)*W+tx+i;if(q<0||q>=W*H)continue;const o=objAt[q];if(!o||o.burnt>time||TYPES[o.type].fixed||o.picked)continue;const v=SP[o.type]&&SP[o.type][o.v];if(!v)continue;
     const hw=Math.max(18,(v.sh?v.sh.rx:20)*.9);if(wx>o.x-hw&&wx<o.x+hw&&wy>o.y+v.top&&wy<o.y+8)cand('obj',o,o.x,o.y,Math.abs(wx-o.x)*.5+Math.max(0,wy-o.y)+20)}
   return best}
-function interactK(q){const k=blockG[q];if(k===12||k===58||k===5||k===8||k===13||k===15||k===16||k===17||k===51||k===55||k===57)return k;if(k===6&&canSleep())return k;if(k===9&&poolAt(q)>=10)return k;const m=mach.get(q)||{};if(k===11)return k;if(k===47&&m.fish>0)return k;if(k===48&&m.mel>0)return k;return 0}
+function interactK(q){const k=blockG[q];if(k===3||k===4||k===12||k===58||k===5||k===8||k===13||k===15||k===16||k===17||k===51||k===55||k===57)return k;if(k===6&&canSleep())return k;if(k===9&&poolAt(q)>=10)return k;const m=mach.get(q)||{};if(k===11)return k;if(k===47&&m.fish>0)return k;if(k===48&&m.mel>0)return k;return 0}
 function tapAt(sx,sy){if(bmode||fainted)return false;const th=thingAt(sx,sy);if(!th)return false;const reach=th.kind==='npc'?4*T:th.kind==='animal'?2.2*T:2.9*T;
   if(Math.hypot(th.bx-P.x,th.by-P.y)>reach){floats.push({x:th.bx,y:th.by-60,text:'Chegue mais perto',life:1.2});return true}
   const dx=th.bx-P.x,dy=th.by-P.y;if(Math.abs(dx)>Math.abs(dy))P.dir=dx>0?'right':'left';else P.dir=dy>0?'down':'up';
@@ -1934,22 +1934,29 @@ function recCard(r){const ok=canCraft(r),mats=hasMats(r.need);
 function repCard(id){const tl=TOOLS[id],w=wearOf(id),ok=w<tl.max&&hasMats(tl.rep);
   return`<div class="rec"><div class="rec-h"><img src="${ICON[id]}" alt=""><div><b>Reparar ${ITEMS[id].toLowerCase()}</b><span>${w}/${tl.max} golpes restantes</span></div></div><div class="need">${tl.rep.map(([it,n])=>chip(it,n)).join('')}</div><button class="btn" type="button" data-repair="${id}"${ok?'':' disabled'}>${w>=tl.max?'Já está novo':ok?'Reparar':'Faltam materiais'}</button></div>`}
 const sec=t=>`<p class="sec" style="grid-column:1/-1">${t}</p>`;
+let craftMode='hand',stationI=-1;
+function openStation(i){const k=blockG[i];if(k!==3&&k!==4)return;stationI=i;craftMode=k===3?'fire':'bench';craftEl.hidden=false;bagEl.hidden=true;buildEl.hidden=true;renderCraft()}
 function renderCraft(){
-  const nb=nearBench();document.getElementById('craftSub').textContent=nb?'Perto da bancada: receitas de metal e reparos liberados':'Receitas à mão · a bancada libera as de metal';
+  const nb=nearBench(),mode=craftMode;document.getElementById('craftTitle').textContent=mode==='fire'?'Fogueira':mode==='bench'?'Bancada de trabalho':'Criar';
+  document.getElementById('craftSub').textContent=mode==='fire'?(nearFire?'Fogo aceso · assar, cozinhar e ferver':'Fogo apagado pela chuva · faça um telhado em cima'):mode==='bench'?'Ferramentas de metal, roupas, armas e reparos':'Receitas à mão · toque na bancada ou na fogueira para as outras';
   const tools=Object.keys(TOOLS).filter(id=>inv[id]>0);let h='';
-  for(const[e,name]of ERAS){const rs=RECIPES.filter(r=>r.era===e),ok=eraOk(e);
+  if(mode==='fire'){h+=sec('Fogueira')+(nearFire?COOK.map(c=>{const tl=!c.tool||inv[c.tool]>0,ok=hasMats(c.need)&&tl;
+      return`<div class="rec"><div class="rec-h"><img src="${ICON[c.out]}" alt=""><div><b>${ITEMS[c.out]}</b><span>Você tem ${inv[c.out]||0}</span></div></div><p>${c.tool?'Ferve a água do rio na panela: fica segura para beber.':`Comendo: ${foodText(c.out)}`}</p><div class="need">${c.need.map(([id,n])=>chip(id,n)).join('')}${c.tool?chip(c.tool,1):''}</div><button class="btn" type="button" data-cook="${c.out}"${ok?'':' disabled'}>${ok?(c.verb||'Assar'):!tl?'Precisa de panela':'Faltam materiais'}</button></div>`}).join(''):'<p class="emptymsg">A chuva apagou o fogo. Espere passar ou faça um telhado de palha em cima da fogueira.</p>');
+    recipesEl.innerHTML=h;return}
+  if(mode==='bench'){for(const[e,name]of ERAS){const rs=RECIPES.filter(r=>r.era===e&&r.st==='bench'),ok=eraOk(e);if(!rs.length&&ok)continue;h+=sec(ok?name:`${name} · bloqueada`);if(!ok){h+=`<p class="emptymsg">${ERA_HINT[e]}.</p>`;continue}h+=rs.map(recCard).join('')}
+    h+=sec('Reparos')+(tools.length?tools.map(repCard).join(''):'<p class="emptymsg">Nenhuma ferramenta para reparar.</p>');recipesEl.innerHTML=h;return}
+  for(const[e,name]of ERAS){const rs=RECIPES.filter(r=>r.era===e&&!r.st),ok=eraOk(e);
     h+=sec(ok?name:`${name} · bloqueada`);
     if(!ok)h+=`<p class="emptymsg">${ERA_HINT[e]}.</p>`;
     if(e==='vapor'&&ok&&!rs.length)h+='<p class="emptymsg">Construa a caldeira e a máquina a vapor na tela Construir.</p>';
-    h+=rs.map(recCard).join('');
-    if(e!=='vapor'&&ok&&!nb&&rs.some(r=>r.st))h+='<p class="emptymsg">Fique perto de uma bancada de trabalho para criar as receitas de metal.</p>';}
-  h+=sec('Bancada · reparos')+(nb?(tools.length?tools.map(repCard).join(''):'<p class="emptymsg">Nenhuma ferramenta para reparar.</p>'):'<p class="emptymsg">Fique perto de uma bancada para reparar as ferramentas.</p>');
+    h+=rs.map(recCard).join('');}
+  h+='<p class="emptymsg">Ferramentas de metal, roupas de couro, armas e reparos ficam na <b>bancada de trabalho</b>; comida e chás, na <b>fogueira</b>. Toque nelas para abrir o menu de cada uma.</p>';recipesEl.innerHTML=h;return;
   h+=sec('Fogueira')+(nearFire?COOK.map(c=>{const tl=!c.tool||inv[c.tool]>0,ok=hasMats(c.need)&&tl;
       return`<div class="rec"><div class="rec-h"><img src="${ICON[c.out]}" alt=""><div><b>${ITEMS[c.out]}</b><span>Você tem ${inv[c.out]||0}</span></div></div><p>${c.tool?'Ferve a água do rio na panela: fica segura para beber.':`Comendo: ${foodText(c.out)}`}</p><div class="need">${c.need.map(([id,n])=>chip(id,n)).join('')}${c.tool?chip(c.tool,1):''}</div><button class="btn" type="button" data-cook="${c.out}"${ok?'':' disabled'}>${ok?(c.verb||'Assar'):!tl?'Precisa de panela':'Faltam materiais'}</button></div>`}).join('')
       :'<p class="emptymsg">Fique perto de uma fogueira acesa para assar comida. Comida assada mata mais a fome e dá energia.</p>');
   recipesEl.innerHTML=h;
 }
-function toggleCraft(){craftEl.hidden=!craftEl.hidden;if(!craftEl.hidden){bagEl.hidden=true;buildEl.hidden=true;renderCraft()}}
+function toggleCraft(){craftEl.hidden=!craftEl.hidden;craftMode='hand';stationI=-1;if(!craftEl.hidden){bagEl.hidden=true;buildEl.hidden=true;renderCraft()}}
 craftBtn.addEventListener('click',toggleCraft);
 document.getElementById('craftClose').addEventListener('click',()=>{craftEl.hidden=true});
 recipesEl.addEventListener('click',e=>{const b=e.target.closest('[data-craft]');if(b&&!b.disabled){audio();dispatch({t:'craft',id:b.dataset.craft})}
@@ -2094,11 +2101,12 @@ function furnOp(i,op,id,n){
   else if(op==='empty'){let j=0;if(f.n){give(f.ore,f.n,P.x,P.y-60,j++);f.n=0;f.ore=null;f.prog=0}if(f.wood){give('madeira',f.wood,P.x,P.y-60,j++);f.wood=0}if(f.coal){give('carvao',f.coal,P.x,P.y-60,j++);f.coal=0}}
   play('craft');save();updateBar();renderFurnace();
 }
-function findInteract(){let best=null;const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);
-  for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){const q=(ty+j)*W+tx+i;if(q<0||q>=W*H)continue;const cr=crops.get(q);if(cr&&cr.ripe){const d=Math.hypot((tx+i+.5)*T-P.x,(ty+j+.5)*T-P.y);if(d<70&&(!best||d<best.d))best={i:q,k:41,d};continue}
-    const lv=netG[q]&16;if(lv){const d=Math.hypot((tx+i+.5)*T-P.x,(ty+j+.5)*T-P.y);if(d<70&&(!best||d<best.d))best={i:q,k:33,d};continue}
-    const k=blockG[q];if(!(k===12||k===58||k===5||k===8||k===13||k===15||k===16||k===17||(k===6&&canSleep())||(k===9&&poolAt(q)>=10)||k===11||(k===47&&(mach.get(q)||{}).fish>0)||(k===48&&(mach.get(q)||{}).mel>0)||k===51||k===55||k===57))continue;
-    const d=Math.hypot((tx+i+.5)*T-P.x,(ty+j+.5)*T-P.y);if(d<70&&(!best||d<best.d))best={i:q,k,d}}return best}
+let istList=[];
+function findInteract(){let best=null;istList=[];const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);
+  for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){const q=(ty+j)*W+tx+i;if(q<0||q>=W*H)continue;const cr=crops.get(q);if(cr&&cr.ripe){const d=Math.hypot((tx+i+.5)*T-P.x,(ty+j+.5)*T-P.y);if(d<70){istList.push({i:q,k:41,d});if(!best||d<best.d)best={i:q,k:41,d}}continue}
+    const lv=netG[q]&16;if(lv){const d=Math.hypot((tx+i+.5)*T-P.x,(ty+j+.5)*T-P.y);if(d<70){istList.push({i:q,k:33,d});if(!best||d<best.d)best={i:q,k:33,d}}continue}
+    const k=blockG[q];if(!(k===3||k===4||k===12||k===58||k===5||k===8||k===13||k===15||k===16||k===17||(k===6&&canSleep())||(k===9&&poolAt(q)>=10)||k===11||(k===47&&(mach.get(q)||{}).fish>0)||(k===48&&(mach.get(q)||{}).mel>0)||k===51||k===55||k===57))continue;
+    const d=Math.hypot((tx+i+.5)*T-P.x,(ty+j+.5)*T-P.y);if(d<70){istList.push({i:q,k,d});if(!best||d<best.d)best={i:q,k,d}}}istList.sort((a,b)=>a.d-b.d);return best}
 /* ---------- sawmill panel ---------- */
 let maOpen=-1;const maEl=document.getElementById('mach'),maBody=document.getElementById('maBody');
 function openMach(i){maOpen=i;maEl.hidden=false;bagEl.hidden=true;craftEl.hidden=true;buildEl.hidden=true;closeFurnace();renderMach()}
@@ -2904,6 +2912,7 @@ function update(dt){
   torchLit=Math.max(DARK,caveD)>.45&&(equipped()==='tocha'||equipped()==='lanterna')&&!fainted;
   if(torchLit&&equipped()==='tocha'){torchT-=dt;if(torchT<=0){inv.tocha--;if(!inv.tocha)delete inv.tocha;torchT=120;floats.push({x:P.x,y:P.y-72,text:'A tocha apagou',life:1.8});updateBar()}}
   if(fuOpen>=0){const fx=(fuOpen%W+.5)*T,fy=((fuOpen/W|0)+.5)*T;if(Math.hypot(fx-P.x,fy-P.y)>3.2*T||fainted)closeFurnace()}
+  if(stationI>=0&&!craftEl.hidden){const fx=(stationI%W+.5)*T,fy=((stationI/W|0)+.5)*T;if(Math.hypot(fx-P.x,fy-P.y)>3.2*T||fainted||(blockG[stationI]!==3&&blockG[stationI]!==4)){craftEl.hidden=true;stationI=-1;craftMode='hand'}}
   if(DARK>.5){for(let k=0;k<3&&flies.length<22;k++){const wx=cam.x+(Math.random()-.5)*vw/zoom,wy=cam.y+(Math.random()-.5)*vh/zoom,ti=Math.floor(wy/T)*W+Math.floor(wx/T);if(ti>=0&&ti<W*H&&(biome[ti]===3||biome[ti]===4||biome[ti]===1))flies.push({x:wx,y:wy,ph:Math.random()*9,life:4+Math.random()*6})}}
   for(const f of flies){f.x+=Math.cos(time*.9+f.ph)*14*dt;f.y+=Math.sin(time*1.3+f.ph*1.7)*10*dt;f.life-=dt*(DARK>.5?1:4)}flies=flies.filter(f=>f.life>0);
   if(ST.molhado>45&&Math.random()<dt*7)parts.push({x:P.x+(Math.random()-.5)*20,y:P.y,z:20+Math.random()*30,vx:0,vy:0,vz:-10,life:.6,c:'#9fd3e6',s:1.6,r:0});
@@ -2926,9 +2935,9 @@ function update(dt){
     const farm=(k,v,sb,tl)=>{if(canPlace(pieceByK(k),fti)){farmI=fti;ACT={v,s:sb,self:1,go:()=>{dispatch({t:'build',k,i:fti});act.swing=1;act.tool=tl||null;act.cd=.4}}}};
     if(focus&&(time-focus.t>(mdown?1e9:.7)))focus=null;if(focus&&mdown)focus.t=time;
     const fc=focus;if(fc&&fc.kind==='ist')ist=fc.ref;ACT2=null;
-    const istAct=ist=>{const m=ist.k===33?['Alavanca',levers.get(ist.i)!==false?'desligar':'ligar']:({41:['Colher',(CROPNAME[(crops.get(ist.i)||{}).sp]||'').toLowerCase()],13:['Composteira','abrir'],15:['Baú','abrir'],16:['Carvoaria','abrir'],17:['Caldeira','abrir'],5:['Fornalha','abrir'],8:['Serraria','abrir'],9:['Beber','do coletor'],11:['Viveiro','sementes de árvore'],12:['Soprar o fole','toque várias vezes'],58:['Girar manivela','toque ou segure · 8 de força'],6:['Dormir','até amanhecer'],47:['Covo','pegar peixes'],55:['Forno elétrico','pôr minério · pegar barras'],57:['Rádio','transmitir'],48:['Caixa de abelhas','colher mel'],51:['Cocho','pôr comida']})[ist.k];
+    const istAct=ist=>{const m=ist.k===33?['Alavanca',levers.get(ist.i)!==false?'desligar':'ligar']:({41:['Colher',(CROPNAME[(crops.get(ist.i)||{}).sp]||'').toLowerCase()],13:['Composteira','abrir'],15:['Baú','abrir'],16:['Carvoaria','abrir'],17:['Caldeira','abrir'],5:['Fornalha','abrir'],8:['Serraria','abrir'],9:['Beber','do coletor'],11:['Viveiro','sementes de árvore'],12:['Soprar o fole','toque várias vezes'],3:['Fogueira','assar e cozinhar'],4:['Bancada','criar e consertar'],58:['Girar manivela','toque ou segure · 8 de força'],6:['Dormir','até amanhecer'],47:['Covo','pegar peixes'],55:['Forno elétrico','pôr minério · pegar barras'],57:['Rádio','transmitir'],48:['Caixa de abelhas','colher mel'],51:['Cocho','pôr comida']})[ist.k];
       const ii=ist.i,kk=ist.k,mm=mach.get(ii)||{};if(kk===8&&mm.in>0&&!(mm.pow>0)){return[{v:'Serrar à mão',s:`${mm.in} madeira${mm.in>1?'s':''} · toque várias vezes`,go:()=>{addStat('energia',-.3);dispatch({t:'pump',i:ii});act.swing=1;act.cd=.3}},{v:'Serraria',s:'abrir',go:()=>{openMach(ii)}}]}
-      return[{v:m[0],s:m[1],go:()=>{act.cd=1e9;focus=null;if(kk===12||kk===58){addStat('energia',-.25);dispatch({t:'pump',i:ii});act.cd=.28}else if(kk===5)openFurnace(ii);else if(kk===15)openChest(ii);else if(kk===8||kk===13||kk===16||kk===17)openMach(ii);else if(kk===41){dispatch({t:'reap',i:ii});act.cd=.4}else if(kk===9){dispatch({t:'tank',i:ii});act.cd=.6}else if(kk===11){dispatch({t:'plot',i:ii});act.cd=.6}else if(kk===47||kk===48){dispatch({t:'collect',i:ii});act.cd=.6}else if(kk===51){dispatch({t:'feed',i:ii});act.cd=.6}else if(kk===55){dispatch({t:'eforno',i:ii});act.cd=.6}else if(kk===57){dispatch({t:'radio',i:ii});act.cd=.6}else if(kk===33)dispatch({t:'lever',i:ii});else dispatch({t:'sleep',i:ii})}}]};
+      return[{v:m[0],s:m[1],go:()=>{act.cd=1e9;focus=null;if(kk===12||kk===58){addStat('energia',-.25);dispatch({t:'pump',i:ii});act.cd=.28}else if(kk===3||kk===4)openStation(ii);else if(kk===5)openFurnace(ii);else if(kk===15)openChest(ii);else if(kk===8||kk===13||kk===16||kk===17)openMach(ii);else if(kk===41){dispatch({t:'reap',i:ii});act.cd=.4}else if(kk===9){dispatch({t:'tank',i:ii});act.cd=.6}else if(kk===11){dispatch({t:'plot',i:ii});act.cd=.6}else if(kk===47||kk===48){dispatch({t:'collect',i:ii});act.cd=.6}else if(kk===51){dispatch({t:'feed',i:ii});act.cd=.6}else if(kk===55){dispatch({t:'eforno',i:ii});act.cd=.6}else if(kk===57){dispatch({t:'radio',i:ii});act.cd=.6}else if(kk===33)dispatch({t:'lever',i:ii});else dispatch({t:'sleep',i:ii})}}]};
     if(fc&&fc.kind==='npc'){const k=fc.ref,n=villagers[k];if(n)ACT={v:'Trocar',s:`${n.name} · ${n.role}`,go:()=>{openTrade(k);act.cd=.5;focus=null}}}
     else if(fc&&fc.kind==='obj'){if(objAt[fc.ref.i]===fc.ref&&!fc.ref.picked){target=fc.ref;ACT=hitAct(fc.ref,eq)}else focus=null}
     else if(fc&&fc.kind==='animal'){const a=animals[fc.ref];if(a&&!a.dead){prey=fc.ref;ACT=eq==='arco'&&inv.flecha>0?{v:'Atirar',s:`${inv.flecha} flechas`,go:()=>{dispatch({t:'shoot',a:fc.ref});act.swing=1;act.tool='arco';act.cd=.75}}:meleeAct(fc.ref)}else focus=null}
@@ -2965,7 +2974,7 @@ function update(dt){
     else if(eq&&!fc&&!ACT2&&FOOD[eq]&&ACT&&!ACT.self){const id=eq;ACT2={v:id==='emplastro'?'Aplicar':RETURNS[id]||id==='polpa'?'Beber':'Comer',s:ITEMS[id].toLowerCase(),go:()=>{dispatch({t:'eat',id});act.cd=.6}}}
     if(!ACT){if(target)ACT=hitAct(target,eq);else{const k=findPrey(64);if(k!=null){prey=k;ACT=meleeAct(k)}else if(nearWaterC)ACT={v:'Beber',s:'rio · arriscado',go:()=>{dispatch({t:'drink'});act.cd=.6}}}}
     {const al=[],key=a=>a.v+'|'+a.s,add=a=>{if(a&&a.ok!==false&&!al.some(b=>key(b)===key(a))&&!(ACT2&&key(ACT2)===key(a)))al.push(a)};add(ACT);
-      if(!fc){const isx=ist||ist0;if(isx&&!isLive(eq))add(istAct(isx)[0]);if(tameK!=null){const a=animals[tameK],k=tameK;add({v:farmVerb(a.sp),s:`${a.prod*(SPEC[a.sp].farmN||1)} de ${ITEMS[SPEC[a.sp].farm].toLowerCase()}`,go:()=>{dispatch({t:'farmc',a:k});act.cd=.6}})}
+      if(!fc){const isx=ist||ist0;if(isx&&!isLive(eq))add(istAct(isx)[0]);if(!isLive(eq))for(const it of istList.slice(0,5))add(istAct(it)[0]);if(tameK!=null){const a=animals[tameK],k=tameK;add({v:farmVerb(a.sp),s:`${a.prod*(SPEC[a.sp].farmN||1)} de ${ITEMS[SPEC[a.sp].farm].toLowerCase()}`,go:()=>{dispatch({t:'farmc',a:k});act.cd=.6}})}
         if(target)add(hitAct(target,eq));if(npcK>=0){const n=villagers[npcK],k=npcK;add({v:'Trocar',s:`${n.name} · ${n.role}`,go:()=>{openTrade(k);act.cd=.5}})}
         if(!P.boat&&boatK>=0){const k=boatK;add({v:'Embarcar',s:'canoa',go:()=>{dispatch({t:'boatOn',b:k});act.cd=.6}})}if(foe!=null)add(meleeAct(foe));if(nearWaterC&&!P.boat)add({v:'Beber',s:'rio · arriscado',go:()=>{dispatch({t:'drink'});act.cd=.6}})}
       ALTS=al;if(al.length>1){let k=al.findIndex(a=>a.v===altSel);if(k<0)k=0;altIdx=k;ACT=al[k]}else altIdx=0}
@@ -3416,7 +3425,7 @@ const GUIDE=[
   b:()=>`<p>${K('<kbd>WASD</kbd> anda e <kbd>Shift</kbd> corre.','Arraste o dedo em qualquer lugar da tela para andar. Pinça aproxima e afasta.')}</p><p>Chegue perto de árvores, pedras e plantas e ${K('segure <kbd>E</kbd>','segure o botão de ação')} para coletar. O botão mostra o que vai acontecer.</p><p><b>Toque ou clique direto</b> no que quer usar: árvore, pedra, fornalha, baú, morador, canoa. Se estiver longe, chegue mais perto.</p><p>O botão de ação dá prioridade ao que está na sua frente. Comer, beber e soltar ficam no <b>botão menor</b> ao lado${K(' (tecla <kbd>F</kbd>)','')}.</p><p>Ferramentas, comida e sementes só funcionam <b>na mão</b>: ${K('aperte <kbd>1</kbd>–<kbd>9</kbd>','toque no item na barra de baixo')}. Tocar de novo guarda o item.</p>`,
   trig:()=>true},
  {id:'criar',cat:'Começo',icon:'corda',t:'Criar ferramentas',
-  b:()=>`<p>Abra <b>Oficina · Criar</b> ${K('(<kbd>C</kbd>)','')}. Comece por <b>corda</b> (3 fibras de helicônia ou buriti), depois <b>machado</b> e <b>picareta</b> de pedra.</p><p>Toque num ingrediente para ver o nome e onde achar. Ferramentas gastam e podem ser consertadas na bancada.</p>`,
+  b:()=>`<p>Abra <b>Oficina · Criar</b> ${K('(<kbd>C</kbd>)','')}. Comece por <b>corda</b> (3 fibras de helicônia ou buriti), depois <b>machado</b> e <b>picareta</b> de pedra.</p><p>Toque num ingrediente para ver o nome e onde achar.</p><p>A <b>bancada de trabalho</b> e a <b>fogueira</b> têm menu próprio, como a fornalha: chegue perto e toque nelas. Na bancada: metal, roupas, armas e consertos. Na fogueira: assar, cozinhar, chás e queijo.</p>`,
   trig:()=>(inv.madeira||0)>=2},
  {id:'construir',cat:'Começo',icon:'p_wall',t:'Construir a base',
   b:()=>`<p>Em <b>Obras · Construir</b> ${K('(<kbd>B</kbd>)','')} escolha a peça e toque no chão. Peças verdes cabem; vermelhas não.</p><ul><li><b>Fogueira</b>: luz, calor e cozinha.</li><li><b>Cama</b>: dorme à noite e vira ponto de retorno.</li><li><b>Telhado</b>: abrigo da chuva e do granizo.</li></ul><p><b>Desmontar</b> devolve todo o material.</p>`,
