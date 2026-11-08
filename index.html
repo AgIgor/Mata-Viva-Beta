@@ -261,7 +261,8 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(-
 .bmleg{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)}
 .bmleg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
 .bmleg .btn{margin-left:auto}
-#toasts{position:fixed;z-index:21;left:50%;transform:translateX(-50%);top:calc(22% + env(safe-area-inset-top,0px));display:grid;gap:8px;pointer-events:none;width:min(320px,calc(100vw - 32px))}
+#toasts{position:fixed;z-index:21;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));display:grid;gap:6px;pointer-events:none;width:min(300px,calc(100vw - 32px))}
+@media (max-width:900px){#toasts{left:calc(10px + env(safe-area-inset-left,0px));transform:none;width:min(250px,calc(100vw - 140px))}.toast{padding:6px 9px;gap:8px}.toast img{width:26px!important;height:26px!important}.toast b{font-size:12px!important}.toast span{font-size:11px!important}}
 .toast{display:flex;gap:10px;align-items:center;background:#18261d;border:1px solid rgba(242,194,48,.55);border-radius:8px;padding:9px 12px;box-shadow:0 10px 30px rgba(0,0,0,.45);animation:tin .35s ease-out}
 .toast.out{transition:opacity .5s,transform .5s;opacity:0;transform:translateY(-8px)}
 .toast img{width:34px;height:34px;flex:none}
@@ -394,7 +395,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(-
       <p>Tudo fica salvo neste navegador, sozinho, a cada poucos segundos.</p>
       <button class="btn" type="button" data-tback>Voltar</button>
     </div>
-    <p class="ttl-ver">Versão 1.28 · teste</p>
+    <p class="ttl-ver">Versão 1.29 · teste</p>
   </div>
 </div>
 <div id="pause" hidden role="dialog" aria-label="Pausa">
@@ -405,7 +406,10 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(-
       <p class="note" id="pzSpdNote">Acelera o dia, a roça, as máquinas, a fome e a sede. Você e os bichos andam no ritmo normal.</p></div>
     <div class="col">
       <button class="btn pri" id="pzGo" type="button">Continuar</button>
-      <button class="btn" id="pzSave" type="button">Salvar agora</button>
+      <button class="btn" id="pzSave" type="button">Salvar…</button>
+      <div class="col" id="pzSaveBox" hidden><span class="lbl">Em qual mundo salvar?</span><ul class="svs" id="pzSlots"></ul>
+        <div class="mprow"><label class="mpf grow">Novo save<input id="pzNew" maxlength="24" autocomplete="off" spellcheck="false"></label><button class="btn" id="pzNewGo" type="button">Salvar novo</button></div>
+        <p class="note" id="pzSaveMsg">O jogo continua salvando sozinho no mundo escolhido.</p></div>
       <button class="btn" id="pzMenu" type="button">Salvar e voltar ao início</button>
     </div>
   </div>
@@ -508,7 +512,7 @@ function vn(x,y,s){const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy,u=fx*
 function fbm(x,y,s,o){let sum=0,amp=.5,f=1,n=0;for(let i=0;i<o;i++){sum+=amp*vn(x*f,y*f,s+i*31);n+=amp;amp*=.5;f*=2.03}return sum/n}
 
 /* ---------- world fields ---------- */
-let S=1,seedStr='';
+let S=1,seedStr='',slotName='';
 let FE=0,FM=0,LAKE=0,RIV=0,WET=0;
 function sample(fx,fy){
   let e=(fbm(fx/24,fy/24,S,5)-.5)*1.9+.5;
@@ -1106,6 +1110,8 @@ const PIECES=[
   {k:99,id:'remove',era:'pedra',name:'Desmontar',cost:[],desc:'Remove a peça mais alta do lugar e devolve todo o material. Também tira plantas e árvores pela raiz (sem dar madeira nem frutos), e nada nasce ali sozinho depois.'}
 ];
 const pieceByK=k=>PIECES.find(p=>p.k===k);
+const kitOk=p=>!!p&&p.k!==99&&p.k!==40&&!CROPK[p.k]&&p.k!==45&&p.k!==46&&p.k!==31&&p.k!==53,kitId=p=>'k_'+p.id,kitPiece=id=>id&&id.startsWith('k_')?PIECES.find(p=>'k_'+p.id===id):null;
+function registerKits(){for(const p of PIECES)if(kitOk(p)){ITEMS[kitId(p)]=p.name;SOURCES[kitId(p)]='Crie no menu Construir';ITEM_ORDER.push(kitId(p))}}
 let floorG=new Uint8Array(W*H),blockG=new Uint8Array(W*H),roofG=new Uint8Array(W*H),loadedBuild=null;
 const isWallK=k=>k===1||k===2;
 function wallConn(i){return{n:isWallK(blockG[i-W]),s:isWallK(blockG[i+W]),e:isWallK(blockG[i+1]),w:isWallK(blockG[i-1])}}
@@ -1657,10 +1663,10 @@ function stepFurnaces(dt){for(const[i,f]of furn){if(f.n<=0)continue;const fo=fol
   if(f.fuel<=0&&f.coal>0){f.coal--;f.fuel+=60;if(fuOpen===i)renderFurnace()}else if(f.fuel<=0&&f.wood>0){f.wood--;f.fuel+=20;if(fuOpen===i)renderFurnace()}
   if(f.fuel>0){f.fuel=Math.max(0,f.fuel-dt);f.prog+=dt/7*fp;
     if(f.prog>=1){f.prog=0;f.n--;const b='barra_'+f.ore;unlockEra(f.ore);f.out[b]=(f.out[b]||0)+1;if(!f.n)f.ore=null;if(fuOpen===i)renderFurnace()}}}}
-function saveKey(){return(MPG?'mataviva:mp:':'mataviva:')+seedStr}
+function saveKey(){return MPG?'mataviva:mp:'+seedStr:'mataviva:'+(slotName||seedStr)}
 var REMOTE=false,MPG=false,LOADOVR=null,MUTE=false;
 function saveData(){const f=[],r=[],b={},br=[];for(let i=0;i<W*H;i++){if(floorG[i]===14)br.push(i);else if(floorG[i])f.push(i);if(roofG[i])r.push(i);if(blockG[i])b[i]=blockG[i]}
-  return({inv,ch:changes,wear,bd:{f,r,b,br},st:ST,pos:[P.x,P.y],fu:[...furn],day:[dayT,dayN],torch:torchT,bed:bedSpawn,net:[...netG.keys()].filter(i=>netG[i]).map(i=>[i,netG[i]]),ma:[...mach],lv:[...levers],eras,v:9,vn:[...veins].map(([i,v])=>[i,v.type,v.stock]),ts:Date.now(),pt:Math.round(playT),eq:equip,disc:[...disc],ach:[...achs],qd:[...qDone],stats,showQ,tips:[tipsOn,[...tipsSeen]],vil:vstate,bt:boats.map(b=>[b.x|0,b.y|0,Math.max(0,DIR4.indexOf(b.dir))]),onb:P.boat?1:0,exp:packBits(explored),wp,pl:[...planted],tm:animals.filter(a=>a.tame&&!a.dead).map(a=>[a.sp,a.x|0,a.y|0,a.hx|0,a.hy|0,a.prod||0,+(a.prog||0).toFixed(2),+a.sz.toFixed(2)]),soil:[...soilG.keys()].filter(i=>soilG[i]),cr:[...crops]})}
+  return({inv,ch:changes,wear,bd:{f,r,b,br},st:ST,pos:[P.x,P.y],fu:[...furn],day:[dayT,dayN],torch:torchT,bed:bedSpawn,net:[...netG.keys()].filter(i=>netG[i]).map(i=>[i,netG[i]]),ma:[...mach],lv:[...levers],eras,v:9,sd:seedStr,vn:[...veins].map(([i,v])=>[i,v.type,v.stock]),ts:Date.now(),pt:Math.round(playT),eq:equip,disc:[...disc],ach:[...achs],qd:[...qDone],stats,showQ,tips:[tipsOn,[...tipsSeen]],vil:vstate,bt:boats.map(b=>[b.x|0,b.y|0,Math.max(0,DIR4.indexOf(b.dir))]),onb:P.boat?1:0,exp:packBits(explored),wp,pl:[...planted],tm:animals.filter(a=>a.tame&&!a.dead).map(a=>[a.sp,a.x|0,a.y|0,a.hx|0,a.hy|0,a.prod||0,+(a.prog||0).toFixed(2),+a.sz.toFixed(2)]),soil:[...soilG.keys()].filter(i=>soilG[i]),cr:[...crops]})}
 function save(){if(REMOTE||inTitle)return;try{localStorage.setItem(saveKey(),JSON.stringify(saveData()))}catch(_){}}
 let loadedPos=null;
 function load(){playT=0;loadedVeins=null;inv={};changes={};wear={};loadedBuild=null;loadedPos=null;ST=ST0();dayT=.3;dayN=1;torchT=120;bedSpawn=-1;furn=new Map();netG=new Uint8Array(W*H);mach=new Map();netDirty=true;levers=new Map();eras={cobre:false,ferro:false,vapor:false};needMig=false;equip=null;disc=new Set();achs=new Set();qDone=new Set();loadedTame=[];fishing=null;vstate={d:0,u:{}};boats=[];loadedOnBoat=false;P.boat=null;tipsSeen=new Set();tipsOn=true;coachCD=2;if(typeof coachEl!=='undefined'&&coachEl)coachEl.hidden=true;planted=new Map();fires.clear();burnt.clear();gdrops=[];stats=newStats();explored=new Uint8Array(W*H);wp=-1;hadStats=false;soilG=new Uint8Array(W*H);crops=new Map();try{const d=LOADOVR||JSON.parse(localStorage.getItem(saveKey())||'null');LOADOVR=null;;if(d){if(d.day){dayT=d.day[0];dayN=d.day[1]}playT=d.pt||0;loadedVeins=Array.isArray(d.vn)?d.vn:null;if(d.torch)torchT=d.torch;if(d.bed!=null)bedSpawn=d.bed;if(d.fu)furn=new Map(d.fu);if(d.net)for(const[i,b]of d.net)netG[i]=b;if(d.ma)mach=new Map(d.ma);if(d.lv)levers=new Map(d.lv);equip=d.eq||null;if(d.disc)disc=new Set(d.disc);if(d.ach)achs=new Set(d.ach);if(d.qd)qDone=new Set(d.qd);if(d.stats){stats=Object.assign(newStats(),d.stats);hadStats=true}if(d.showQ===false)showQ=false;if(d.exp)unpackBits(d.exp,explored);if(d.wp!=null)wp=d.wp;loadedTame=d.tm||[];if(d.vil)vstate=d.vil;boats=(d.bt||[]).map(b=>({bt:1,x:b[0],y:b[1],dir:DIR4[b[2]]||'right',mv:0}));loadedOnBoat=!!d.onb;if(d.tips){tipsOn=d.tips[0]!==false;tipsSeen=new Set(d.tips[1]||[])}planted=new Map(d.pl||[]);if(d.soil)for(const i of d.soil)soilG[i]=1;if(d.cr)crops=new Map(d.cr);eras=Object.assign({cobre:false,ferro:false,vapor:false,eletrica:false},d.eras||{});needMig=!d.v;inv=d.inv||{};changes=d.ch||{};wear=d.wear||{};loadedBuild=d.bd||null;if(d.st)ST=Object.assign(ST0(),d.st);loadedPos=d.pos||null;if(inv.fio_cobre){inv.barra_cobre=(inv.barra_cobre||0)+Math.ceil(inv.fio_cobre/3);delete inv.fio_cobre}if(!d.eras){if(inv.barra_cobre||inv.barra_ferro||(d.ma&&d.ma.length))eras.cobre=true;if(inv.barra_ferro||inv.machado_ferro||inv.picareta_ferro)eras.ferro=true}}}catch(_){}}
@@ -1668,8 +1674,8 @@ function miniStruct(i){const k=blockG[i],c=soilG[i]&&!k&&!roofG[i]?'#6b4a2e':isW
 function makeStump(o){return{type:'stump',v:o.v,x:o.x,y:o.y,ph:o.ph,i:o.i,from:o.from||(o.type!=='stump'&&TYPES[o.type]&&TYPES[o.type].tree?o.type:null),g:o.g&&o.type==='stump'?o.g:0}}
 const REGROW={fern:120,helic:180,guaco:240,boldo:240,quina:300,mandiocaW:300,milhoW:300,aboboraW:300,mandacaru:420,mangue:0};
 function miniPixel(i){const tx=i%W,ty=(i/W)|0;groundRGB(tx+.5,ty+.5,GC);const mx=miniBase.getContext('2d');mx.fillStyle=`rgb(${GC[0]|0},${GC[1]|0},${GC[2]|0})`;mx.fillRect(tx,ty,1,1)}
-function generate(txt){
-  seedStr=txt;S=hashStr(txt)&0x7fffffff;
+function generate(txt,slot){
+  seedStr=txt;slotName=slot!=null?slot:txt;S=hashStr(txt)&0x7fffffff;
   biome=new Uint8Array(W*H);nearW=new Uint8Array(W*H);objAt=new Array(W*H).fill(null);
   for(let ty=0;ty<H;ty++)for(let tx=0;tx<W;tx++){sample(tx+.5,ty+.5);let b;
     if(WET>0)b=0;else if(LAKE>-.075&&LAKE>RIV&&FM>.555)b=6;else if(-WET<.02)b=1;else if(FE>.845)b=7;else if(FE>.72)b=5;else if(FM<.42)b=2;else if(FM>.58)b=4;else b=3;biome[ty*W+tx]=b}
@@ -1910,7 +1916,7 @@ const wearOf=id=>wear[id]??TOOLS[id].max;
 const SEEDK={rama_mandioca:41,semente_milho:42,semente_abobora:43};
 let equip=null;
 function equipped(){if(equip&&!(inv[equip]>0))equip=null;return equip}
-function hotbarList(){const pr=[...Object.keys(TOOLS),'arco','vara','canoa','laco','lanca_cobre','lanca_ferro','facao','galinha_viva','cabra_viva','vaca_viva','porco_viva','tocha','lanterna','cabaca','agua_limpa','agua_rio','balde','balde_agua',...Object.keys(SEEDK),'adubo','farinha_osso',...Object.keys(FOOD)];const seen=new Set(),out=[];
+function hotbarList(){const pr=[...Object.keys(TOOLS),...Object.keys(inv).filter(k=>k.startsWith('k_')),'arco','vara','canoa','laco','lanca_cobre','lanca_ferro','facao','galinha_viva','cabra_viva','vaca_viva','porco_viva','tocha','lanterna','cabaca','agua_limpa','agua_rio','balde','balde_agua',...Object.keys(SEEDK),'adubo','farinha_osso',...Object.keys(FOOD)];const seen=new Set(),out=[];
   for(const id of pr.concat(ITEM_ORDER))if(!seen.has(id)&&inv[id]>0){seen.add(id);out.push(id)}return out}
 const HAND_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V6.5a1.5 1.5 0 0 1 3 0V12"/><path d="M11 11V5a1.5 1.5 0 0 1 3 0v6"/><path d="M14 11V6.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-1a5 5 0 0 1-4.2-2.3L4 13.5a1.5 1.5 0 0 1 2.5-1.6L8 14"/></svg>';
 function updateBar(){
@@ -1970,10 +1976,11 @@ function craft(id){
   play('craft');save();updateBar();renderCraft();if(!bagEl.hidden)renderBag();
 }
 /* ---------- building ---------- */
-const affordable=p=>p.cost.every(([id,n])=>(inv[id]||0)>=n);
-const howMany=p=>p.cost.length?Math.min(...p.cost.map(([id,n])=>Math.floor((inv[id]||0)/n))):0;
+const affordable=p=>(kitOk(p)&&inv[kitId(p)]>0)||p.cost.every(([id,n])=>(inv[id]||0)>=n);
+const matMany=p=>p.cost.length?Math.min(...p.cost.map(([id,n])=>Math.floor((inv[id]||0)/n))):0,howMany=p=>(kitOk(p)?inv[kitId(p)]||0:0)+matMany(p);
 let bRot='H';
 function setBuild(p){
+  if(!p&&equip&&equip.startsWith('k_'))equip=null;
   bmode=p;{const rb=document.getElementById('rmBtn');if(rb){const on=!!p&&p.k===99;rb.setAttribute('aria-pressed',String(on));rb.classList.toggle('on',on);document.getElementById('rmv').textContent=on?'Ligado · sair':'Desmontar'}}pick={i:-1,t:-99};buildbar.hidden=!p;document.getElementById('bbRot').hidden=!(p&&(p.k===30||p.k===34||p.k===35));if(p&&(p.k===34||p.k===35)){bDir={right:0,down:1,left:2,up:3}[P.dir];rotLabel()}else if(p&&p.k===30)rotLabel();
   if(p){hint.classList.add('gone');refreshBuildbar()}
 }
@@ -1982,13 +1989,15 @@ function refreshBuildbar(){if(!bmode)return;document.getElementById('bbImg').src
 function renderPieces(){
   const grp=[['pedra','Era da pedra · abrigo e oficina'],['sitio','Sítio · pesca, abelhas e criação'],['cobre','Era do cobre · força da água'],['ferro','Era do ferro · carvão e bombas'],['vapor','Era do vapor'],['eletrica','Era elétrica · dínamo e luz']];
   const card=p=>{const lk=!eraOk(p.era),noHoe=p.k===40&&!(inv.enxada>0),ok=p.k===99||(!lk&&!noHoe&&affordable(p));
-    return`<div class="rec"><div class="rec-h"><img src="${ICON['p_'+p.id]}" alt=""${lk?' style="opacity:.45"':''}><div><b>${p.name}</b><span>${p.k===99?'Sem custo':lk?ERA_HINT[p.era]:p.k===40?(inv.enxada>0?`Enxada: ${wearOf('enxada')} usos`:'Crie uma enxada primeiro'):`Dá para fazer ${howMany(p)}`}</span></div></div><p>${p.desc}</p>${p.cost.length?`<div class="need">${p.cost.map(([id,n])=>chip(id,n)).join('')}</div>`:''}<button class="btn" type="button" data-piece="${p.k}"${ok?'':' disabled'}>${ok?'Escolher':lk?'Bloqueada':noHoe?'Precisa de enxada':'Faltam materiais'}</button></div>`};
+    return`<div class="rec"><div class="rec-h"><img src="${ICON['p_'+p.id]}" alt=""${lk?' style="opacity:.45"':''}><div><b>${p.name}</b><span>${p.k===99?'Sem custo':lk?ERA_HINT[p.era]:p.k===40?(inv.enxada>0?`Enxada: ${wearOf('enxada')} usos`:'Crie uma enxada primeiro'):`Dá para fazer ${howMany(p)}`}</span></div></div><p>${p.desc}</p>${p.cost.length?`<div class="need">${p.cost.map(([id,n])=>chip(id,n)).join('')}</div>`:''}${kitOk(p)&&!lk?`<div class="btnrow"><button class="btn" type="button" data-make="${p.k}"${matMany(p)>0?'':' disabled'}>${matMany(p)>0?'Criar · vai para a mochila':'Faltam materiais'}</button>${inv[kitId(p)]>0?`<button class="btn ghostbtn" type="button" data-piece="${p.k}">Colocar · tem ${inv[kitId(p)]}</button>`:''}</div>`:`<button class="btn" type="button" data-piece="${p.k}"${ok?'':' disabled'}>${ok?'Escolher':lk?'Bloqueada':noHoe?'Precisa de enxada':'Faltam materiais'}</button>`}</div>`};
   piecesEl.innerHTML=grp.map(([e,t])=>sec(e==='plant'||e==='sitio'||eraOk(e)?t:t+' · bloqueada')+PIECES.filter(p=>e==='plant'||e==='sitio'?p.grp===e:p.era===e&&p.k!==99&&!p.grp).map(card).join('')).join('')+sec('Ferramenta')+card(pieceByK(99));
 }
+function makeKit(k){const p=pieceByK(k);if(!kitOk(p)||matMany(p)<1)return;for(const[id,n]of p.cost){inv[id]-=n;if(inv[id]<=0)delete inv[id]}inv[kitId(p)]=(inv[kitId(p)]||0)+1;gotItem(kitId(p),1);
+  floats.push({x:P.x,y:P.y-72,text:`+1 ${p.name} na mochila`,life:1.6});play('craft');save();updateBar();renderPieces();if(!bagEl.hidden)renderBag()}
 function toggleBuild(){buildEl.hidden=!buildEl.hidden;if(!buildEl.hidden){bagEl.hidden=true;craftEl.hidden=true;renderPieces()}}
 document.getElementById('buildBtn').addEventListener('click',toggleBuild);
 document.getElementById('buildClose').addEventListener('click',()=>{buildEl.hidden=true});
-piecesEl.addEventListener('click',e=>{const b=e.target.closest('[data-piece]');if(b&&!b.disabled){setBuild(pieceByK(+b.dataset.piece));buildEl.hidden=true}});
+piecesEl.addEventListener('click',e=>{const mk=e.target.closest('[data-make]');if(mk&&!mk.disabled){audio();makeKit(+mk.dataset.make);return}const b=e.target.closest('[data-piece]');if(b&&!b.disabled){setBuild(pieceByK(+b.dataset.piece));buildEl.hidden=true}});
 document.getElementById('bbSwap').addEventListener('click',toggleBuild);
 let bDir=0;
 function rotLabel(){document.getElementById('bbRot').textContent=bmode&&(bmode.k===34||bmode.k===35)?`Girar ${'→↓←↑'[bDir]}`:bRot==='H'?'Girar ↔':'Girar ↕'}
@@ -2019,7 +2028,7 @@ function canPlace(p,i){if(VIL&&VIL.tiles.has(i))return false;
 function placeAt(i){if(bmode&&bmode.k===99){const bi=boatAtTile(i);if(bi>=0){dispatch({t:'boatUp',b:bi});act.swing=1;return}}if(bmode&&canPlace(bmode,i)){dispatch(bmode.k===99?{t:'unbuild',i}:{t:'build',k:bmode.k,i});act.swing=1;act.tool=null}}
 function build(k,i){
   const p=pieceByK(k);if(!canPlace(p,i))return;stats.built[k]=(stats.built[k]||0)+1;
-  for(const[id,n]of p.cost){inv[id]-=n;if(inv[id]<=0)delete inv[id]}
+  if(kitOk(p)&&inv[kitId(p)]>0){inv[kitId(p)]--;if(!inv[kitId(p)])delete inv[kitId(p)]}else for(const[id,n]of p.cost){inv[id]-=n;if(inv[id]<=0)delete inv[id]}
   if(k===40){soilG[i]=1;wear.enxada=wearOf('enxada')-1;if(wear.enxada<=0){inv.enxada--;if(!inv.enxada)delete inv.enxada;wear.enxada=TOOLS.enxada.max;floats.push({x:P.x,y:P.y-80,text:'A enxada quebrou',life:1.8})}give('terra',1,(i%W+.5)*T,((i/W)|0)*T,0)}
   else if(CROPK[k])crops.set(i,{sp:CROPK[k],g:0,w:soilWet(i)?1:0,f:false,ripe:false});
   else if(k===45||k===46){const c=crops.get(i);c.f=k===46?2:true;for(let n=0;n<8;n++)parts.push({x:(i%W+.5)*T+(Math.random()-.5)*30,y:((i/W)|0)*T+30,z:10,vx:0,vy:0,vz:20,life:.6,c:'#3a2414',s:2,r:0})}
@@ -2033,7 +2042,7 @@ function unbuild(i){
   let k=0;if(roofG[i]){k=20;roofG[i]=0}else if(blockG[i]){k=blockG[i];if(k===5){dumpFurn(i);furn.delete(i);if(fuOpen===i)closeFurnace()}if(isMachK(k)){dumpMach(i);mach.delete(i);if(maOpen===i)closeMach()}blockG[i]=0}else if(netG[i]&32){k=53;netG[i]&=~32}else if(netG[i]&2){k=31;netG[i]&=~2}else if(netG[i]&MECH){k=netG[i]&8?32:netG[i]&16?33:30;if(k===33)levers.delete(i);netG[i]&=~MECH}else if(crops.has(i)){const c=crops.get(i);k={mandioca:41,milho:42,abobora:43}[c.sp];crops.delete(i)}else if(soilG[i]){k=40;soilG[i]=0}else if(floorG[i]){k=floorG[i]===14?14:10;floorG[i]=0}
   netDirty=true;
   if(!k){if(removablePlant(i))clearPlant(i);return}const p=pieceByK(k),tx=i%W,ty=(i/W)|0;
-  p.cost.forEach(([id,n],j)=>give(id,n,(tx+.5)*T,(ty+.5)*T-HH,j));
+  if(kitOk(p))give(kitId(p),1,(tx+.5)*T,(ty+.5)*T-HH,0);else p.cost.forEach(([id,n],j)=>give(id,n,(tx+.5)*T,(ty+.5)*T-HH,j));
   play('unbuild');miniStruct(i);save();updateBar();refreshBuildbar();
 }
 function nearBench(){const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){const q=(ty+j)*W+tx+i;if(q>=0&&q<W*H&&blockG[q]===4)return true}return false}
@@ -2648,7 +2657,7 @@ async function mpStart2(host,code){const r=await getRoomApi();if(!r){document.ge
   room.presence({n:nm,c:mp.myC,h:host?1:0,r:null,w:null,u:mp.uid});
   document.getElementById('mpMode').textContent=r.src==='claude'?'Online pela sala ao vivo do Claude':r.src==='peer'?'Online direto entre navegadores (PeerJS)':'Teste local: abas deste navegador';
   mp.unsub=room.onPeers(ch=>mpPeers(ch));mpUI();toast('Multiplayer',host?'Sala criada':'Entrando na sala','Código '+code.toUpperCase(),ICON.p_bed)}
-async function mpLeave(){if(!mp.on)return;try{mp.unsub&&mp.unsub();await mp.room.leave()}catch(_){}mp.on=false;mp.room=null;others.clear();const wasGuest=MPG;MPG=false;mpUI();if(wasGuest){save();generate(mp.prevSeed||seedStr);mp.prevSeed=null}}
+async function mpLeave(){if(!mp.on)return;try{mp.unsub&&mp.unsub();await mp.room.leave()}catch(_){}mp.on=false;mp.room=null;others.clear();const wasGuest=MPG;MPG=false;mpUI();if(wasGuest){save();generate(mp.prevSeed||seedStr,mp.prevSlot||null);mp.prevSeed=null}}
 function dispatch(cmd){if(mp.on&&mp.ready&&REPL.has(cmd.t)){mp.seq++;mp.out.push([mp.seq,cmd,P.x|0,P.y|0]);if(mp.out.length>22)mp.out.shift()}applyCmd(cmd)}
 function applyRemote(cmd,x,y){const sv={inv,wear:JSON.stringify(wear),x:P.x,y:P.y,dir:P.dir,st:JSON.stringify(ST),eq:equip,fl:floats.length,stats:JSON.stringify(stats),disc:new Set(disc),eras:JSON.stringify(eras),sw:act.swing,cd:act.cd};
   REMOTE=true;MUTE=Math.hypot(x-P.x,y-P.y)>10*T;inv=new Proxy({},{get:(t,k)=>typeof k==='string'?999:undefined,set:()=>true,deleteProperty:()=>true});P.x=x;P.y=y;
@@ -2678,7 +2687,7 @@ async function mpReceive(w,bag,q){let txt='';for(let i=0;i<w.n;i++)txt+=bag[i];l
   const world=JSON.parse(json);let mine=null;try{mine=JSON.parse(localStorage.getItem('mataviva:mp:'+world.seed)||'null')}catch(_){}
   const merged=Object.assign({inv:{},v:9},mine||{});for(const k of['ch','bd','fu','day','net','ma','lv','pl','tm','soil','cr'])merged[k]=world[k];merged.v=9;
   if(Array.isArray(q.p))merged.pos=[(+q.p[0]||0)+40,(+q.p[1]||0)+10];
-  if(!MPG)mp.prevSeed=seedStr;MPG=true;LOADOVR=merged;generate(world.seed);save();
+  if(!MPG){mp.prevSeed=seedStr;mp.prevSlot=slotName}MPG=true;LOADOVR=merged;generate(world.seed);save();
   mp.ready=true;mp.seen.clear();if(mp.hostPeer)mp.seen.set(mp.hostPeer,world.seq|0);
   mp.room.presence({r:w.id});toast('Multiplayer','Você entrou no mundo do anfitrião','Semente '+world.seed,ICON.p_bed);mpUI()}
 function mpTick(dt){if(!mp.on)return;
@@ -2780,14 +2789,14 @@ function applyCmd(cmd){
 }
 document.getElementById('bagBtn').addEventListener('click',toggleBag);
 slotsEl.addEventListener('click',e=>{const b=e.target.closest('[data-eq]');if(!b)return;audio();dispatch({t:'equip',id:b.dataset.eq})});
-function setEquip(id){equip=id&&equip!==id?id:null;if(id&&equip)floats.push({x:P.x,y:P.y-80,text:`Na mão: ${ITEMS[id]}`,life:1.2});play('build');save();updateBar();if(!bagEl.hidden)renderBag()}
+function setEquip(id){equip=id&&equip!==id?id:null;{const kp=kitPiece(equip);if(kp){setBuild(kp);buildEl.hidden=true}else if(bmode&&kitPiece(id||''))setBuild(null)}if(id&&equip)floats.push({x:P.x,y:P.y-80,text:`Na mão: ${ITEMS[id]}`,life:1.2});play('build');save();updateBar();if(!bagEl.hidden)renderBag()}
 itemsEl.addEventListener('click',e=>{const b=e.target.closest('[data-eat]');if(b){audio();dispatch({t:'eat',id:b.dataset.eat})}const f=e.target.closest('[data-fill]');if(f&&!f.disabled){audio();dispatch({t:'fill',c:f.dataset.fill})}const q=e.target.closest('[data-equip]');if(q){audio();if(equipped()!==q.dataset.equip)dispatch({t:'equip',id:q.dataset.equip})}});
 function nearTank(){const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){const q=(ty+j)*W+tx+i;if(q>=0&&q<W*H&&blockG[q]===9&&poolAt(q)>=10&&Math.hypot((tx+i+.5)*T-P.x,(ty+j+.5)*T-P.y)<80)return q}return -1}
 function fillSource(){return nearTank()>=0?'limpa':waterNear()?'rio':null}
 function fill(c){c=c==='balde'?'balde':'cabaca';if(!(inv[c]>0))return;const t=nearTank();let id;if(t>=0){takeWater(wNets[wNet[t]],c==='balde'?25:10);id=c==='balde'?'balde_agua':'agua_limpa'}else if(waterNear())id=c==='balde'?'balde_agua':'agua_rio';else return;inv[c]--;if(!inv[c])delete inv[c];inv[id]=(inv[id]||0)+1;gotItem(id,1);floats.push({x:P.x,y:P.y-72,text:`+1 ${ITEMS[id]}`,life:1.5});play('drink');save();updateBar();if(!bagEl.hidden)renderBag()}
 document.getElementById('bagClose').addEventListener('click',()=>{bagEl.hidden=true});
 const resetBtn=document.getElementById('reset');let resetArm=0;
-resetBtn.addEventListener('click',()=>{if(Date.now()-resetArm<3000){try{localStorage.removeItem(saveKey())}catch(_){}resetArm=0;resetBtn.textContent='Recomeçar este mundo';generate(seedStr)}else{resetArm=Date.now();resetBtn.textContent='Toque de novo para confirmar';setTimeout(()=>{if(Date.now()-resetArm>=2900)resetBtn.textContent='Recomeçar este mundo'},3000)}});
+resetBtn.addEventListener('click',()=>{if(Date.now()-resetArm<3000){try{localStorage.removeItem(saveKey())}catch(_){}resetArm=0;resetBtn.textContent='Recomeçar este mundo';generate(seedStr,slotName)}else{resetArm=Date.now();resetBtn.textContent='Toque de novo para confirmar';setTimeout(()=>{if(Date.now()-resetArm>=2900)resetBtn.textContent='Recomeçar este mundo'},3000)}});
 function unlockEra(e){if(eras[e])return;eras[e]=true;floats.push({x:P.x,y:P.y-100,text:'Nova era: '+{cobre:'Cobre',ferro:'Ferro',vapor:'Vapor',eletrica:'Elétrica'}[e]+'!',life:3.2});play('get');setTimeout(()=>play('craft'),220);updateBar()}
 function give(id,n,x,y,k){inv[id]=(inv[id]||0)+n;gotItem(id,n);if(id==='barra_cobre')unlockEra('cobre');if(id==='barra_ferro')unlockEra('ferro');if(id==='bobina')unlockEra('eletrica');floats.push({x,y:y-k*16,text:`+${n} ${ITEMS[id]}`,life:1.5});popId=id}
 
@@ -3317,7 +3326,8 @@ function packBits(a){let s2='';for(let i=0;i<a.length;i+=8){let b=0;for(let k=0;
 function unpackBits(str,a){try{const s2=atob(str);for(let i=0;i<s2.length;i++){const b=s2.charCodeAt(i);for(let k=0;k<8;k++)a[i*8+k]=(b>>k)&1}}catch(_){}}
 /* toasts */
 const toastsEl=document.getElementById('toasts');
-function toast(kind,title,sub,icon){const t=document.createElement('div');t.className='toast';t.innerHTML=`${icon?`<img src="${icon}" alt="">`:''}<div><small>${kind}</small><b>${title}</b>${sub?`<span>${sub}</span>`:''}</div>`;toastsEl.appendChild(t);while(toastsEl.children.length>2)toastsEl.firstChild.remove();setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),600)},3600)}
+function placeToasts(){if(innerWidth>900){toastsEl.style.top='';return}let bt=0;for(const el of document.querySelectorAll('.hud.tl,#questLine'))if(!el.hidden){const r=el.getBoundingClientRect();if(r.height)bt=Math.max(bt,r.bottom)}if(bt)toastsEl.style.top=Math.round(bt+10)+'px'}
+function toast(kind,title,sub,icon){placeToasts();const t=document.createElement('div');t.className='toast';t.innerHTML=`${icon?`<img src="${icon}" alt="">`:''}<div><small>${kind}</small><b>${title}</b>${sub?`<span>${sub}</span>`:''}</div>`;toastsEl.appendChild(t);while(toastsEl.children.length>2)toastsEl.firstChild.remove();setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),600)},3600)}
 /* discoveries */
 const ANIM_ICON={};
 function animalIcon(sp){if(ANIM_ICON[sp])return ANIM_ICON[sp];const c=document.createElement('canvas');c.width=c.height=96;const x=c.getContext('2d');x.scale(2,2);const a={sp,x:22,y:38,dir:1,sz:SPEC[sp].sz>1?.95:1.15,vx:0,vy:0,ph:0,hp:SPEC[sp].hp,mode:'',ang:0,icon:1,z:0};x.translate(-a.sz*2,0);drawAnimal(x,a);return ANIM_ICON[sp]=c.toDataURL()}
@@ -3596,7 +3606,7 @@ const titleEl=document.getElementById('title'),pauseEl=document.getElementById('
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(_){return null}},lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(_){}};
 function listSaves(){const out=[];try{for(let n=0;n<localStorage.length;n++){const key=localStorage.key(n);if(!key||!key.startsWith('mataviva:')||key.startsWith('mataviva:mp:'))continue;const nm=key.slice(9);if(nm==='nome'||nm==='last')continue;
   let d=null;try{d=JSON.parse(localStorage.getItem(key))}catch(_){}if(!d||!d.inv)continue;let era='Era da pedra';for(const[id,l]of ERAS)if(d.eras&&d.eras[id])era=l;
-  out.push({seed:nm,day:d.day?d.day[1]:1,ts:d.ts||0,pt:d.pt||0,era,tame:(d.tm||[]).length})}}catch(_){}return out.sort((a,b)=>b.ts-a.ts)}
+  out.push({seed:nm,sd:d.sd||nm,day:d.day?d.day[1]:1,ts:d.ts||0,pt:d.pt||0,era,tame:(d.tm||[]).length})}}catch(_){}return out.sort((a,b)=>b.ts-a.ts)}
 function whenTxt(ts){if(!ts)return'';const d=new Date(ts),now=new Date();const hm=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});return d.toDateString()===now.toDateString()?`hoje, ${hm}`:`${d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}, ${hm}`}
 function ptTxt(s){const m=Math.round(s/60);return m<60?`${m} min jogados`:`${Math.floor(m/60)} h ${m%60} min jogados`}
 function bestSave(){const all=listSaves(),l=lsGet('mataviva:last');return all.find(v=>v.seed===l)||all[0]||null}
@@ -3609,10 +3619,10 @@ const NAMES=['ipe-amarelo','buriti','jatoba','pequi','sabia','carcara','vereda',
 function randName(){const used=new Set(listSaves().map(v=>v.seed));for(let k=0;k<40;k++){const n=NAMES[Math.random()*NAMES.length|0]+(k>8?'-'+(Math.random()*90+10|0):'');if(!used.has(n))return n}return'mata-'+Math.random().toString(36).slice(2,6)}
 let delArm=null;
 function renderSlots(){const all=listSaves(),ul=document.getElementById('tSlots');if(!all.length){titleShow('main');return}
-  ul.innerHTML=all.map(v=>`<li class="sv${v.seed===lsGet('mataviva:last')?' cur':''}"><div class="nm"><b>${esc(v.seed)}</b><small>Dia ${v.day} · ${v.era}${v.tame?` · ${v.tame} bicho${v.tame>1?'s':''}`:''}</small><small>${[whenTxt(v.ts),v.pt?ptTxt(v.pt):''].filter(Boolean).join(' · ')}</small></div><button class="btn del${delArm===v.seed?' arm':''}" type="button" data-del="${esc(v.seed)}">${delArm===v.seed?'Apagar?':'Apagar'}</button><button class="btn go" type="button" data-play="${esc(v.seed)}">Jogar</button></li>`).join('')}
+  ul.innerHTML=all.map(v=>`<li class="sv${v.seed===lsGet('mataviva:last')?' cur':''}"><div class="nm"><b>${esc(v.seed)}</b><small>${v.sd!==v.seed?`Mapa ${esc(v.sd)} · `:''}Dia ${v.day} · ${v.era}${v.tame?` · ${v.tame} bicho${v.tame>1?'s':''}`:''}</small><small>${[whenTxt(v.ts),v.pt?ptTxt(v.pt):''].filter(Boolean).join(' · ')}</small></div><button class="btn del${delArm===v.seed?' arm':''}" type="button" data-del="${esc(v.seed)}">${delArm===v.seed?'Apagar?':'Apagar'}</button><button class="btn go" type="button" data-play="${esc(v.seed)}">Jogar</button></li>`).join('')}
 document.getElementById('tSlots').addEventListener('click',e=>{const pb=e.target.closest('[data-play]');if(pb){audio();startWorld(pb.dataset.play);return}
   const db=e.target.closest('[data-del]');if(db){const sd=db.dataset.del;if(delArm===sd){try{localStorage.removeItem('mataviva:'+sd)}catch(_){}if(lsGet('mataviva:last')===sd)try{localStorage.removeItem('mataviva:last')}catch(_){}delArm=null}else{delArm=sd;setTimeout(()=>{if(delArm===sd){delArm=null;if(!titleEl.hidden)renderSlots()}},3500)}renderSlots()}});
-function startWorld(seed){seed=(seed||'').trim().slice(0,24)||'ipe-amarelo';if(seed!==seedStr||!inTitleFresh)generate(seed);inTitle=false;inTitleFresh=false;paused=false;titleEl.hidden=true;document.body.classList.remove('intitle');lsSet('mataviva:last',seed);keys.clear();last=0;save();updateBar();wxLabel()}
+function startWorld(seed){seed=(seed||'').trim().slice(0,24)||'ipe-amarelo';if(seed!==slotName||!inTitleFresh){let sd=seed;try{const d=JSON.parse(localStorage.getItem('mataviva:'+seed)||'null');if(d&&d.sd)sd=d.sd}catch(_){}generate(sd,seed)}inTitle=false;inTitleFresh=false;paused=false;titleEl.hidden=true;document.body.classList.remove('intitle');lsSet('mataviva:last',seed);keys.clear();last=0;save();updateBar();wxLabel()}
 let inTitleFresh=true;
 function goTitle(){if(!inTitle){save();}pauseEl.hidden=true;inTitle=true;inTitleFresh=false;paused=true;titleEl.hidden=false;document.body.classList.add('intitle');titleShow('main')}
 document.getElementById('tCont').addEventListener('click',()=>{audio();const b=bestSave();if(b)startWorld(b.seed)});
@@ -3627,12 +3637,22 @@ function setSpeed(v){SPEED=v;spdBtn.textContent=(v===.5?'½':v)+'×';spdBtn.clas
 spdBtn.addEventListener('click',()=>{audio();if(mp.on){floats.push({x:P.x,y:P.y-80,text:'No multiplayer o tempo é o mesmo para todos',life:2});return}const o=[.5,1,2,4];setSpeed(o[(o.indexOf(SPEED)+1)%o.length]);floats.push({x:P.x,y:P.y-80,text:`Tempo ${spdBtn.textContent}`,life:1.2})});
 pauseEl.querySelectorAll('[data-spd]').forEach(b=>b.addEventListener('click',()=>{audio();setSpeed(+b.dataset.spd)}));
 function openPause(){if(inTitle||!pauseEl.hidden)return;paused=true;keys.clear();act.hold=false;joy.on=false;
-  document.getElementById('pzSub').textContent=`${seedStr} · dia ${dayN} · ${ptTxt(playT)}`;
+  document.getElementById('pzSub').textContent=`${slotName||seedStr} · dia ${dayN} · ${ptTxt(playT)}`;
   pauseEl.querySelectorAll('[data-spd]').forEach(b=>b.disabled=mp.on);document.getElementById('pzSpdNote').textContent=mp.on?'No multiplayer o tempo corre igual para todos e o mundo não para enquanto este menu está aberto.':'Acelera o dia, a roça, as máquinas, a fome e a sede. Você e os bichos andam no ritmo normal.';
-  document.getElementById('pzSave').textContent='Salvar agora';document.getElementById('pzMenu').textContent=mp.on?'Sair do grupo e voltar ao início':'Salvar e voltar ao início';setSpeed(SPEED);pauseEl.hidden=false;document.getElementById('pzGo').focus({preventScroll:true})}
+  document.getElementById('pzSave').textContent='Salvar…';document.getElementById('pzSaveBox').hidden=true;document.getElementById('pzMenu').textContent=mp.on?'Sair do grupo e voltar ao início':'Salvar e voltar ao início';setSpeed(SPEED);pauseEl.hidden=false;document.getElementById('pzGo').focus({preventScroll:true})}
 function closePause(){pauseEl.hidden=true;paused=false;last=0}
 document.getElementById('pzGo').addEventListener('click',()=>{audio();closePause()});
-document.getElementById('pzSave').addEventListener('click',e=>{audio();save();e.currentTarget.textContent='Salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});
+let pzArm=null;const hm=()=>new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+function renderSaveBox(){const all=listSaves(),cur=slotName||seedStr,ul=document.getElementById('pzSlots');const list=[{seed:cur,cur:1},...all.filter(v=>v.seed!==cur)];
+  ul.innerHTML=list.map(v=>{const o=all.find(a=>a.seed===v.seed);return`<li class="sv${v.cur?' cur':''}"><div class="nm"><b>${esc(v.seed)}</b><small>${v.cur?'Este mundo':o?[`Dia ${o.day}`,whenTxt(o.ts)].filter(Boolean).join(' · '):''}</small></div><button class="btn${v.cur?' go':pzArm===v.seed?' del arm':''}" type="button" data-slot="${esc(v.seed)}">${v.cur?'Salvar aqui':pzArm===v.seed?'Substituir?':'Salvar por cima'}</button></li>`}).join('');
+  const ni=document.getElementById('pzNew');if(!ni.value)ni.value=cur+'-2'}
+document.getElementById('pzSave').addEventListener('click',()=>{audio();if(MPG){document.getElementById('pzSaveBox').hidden=false;document.getElementById('pzSlots').innerHTML='';document.getElementById('pzSaveMsg').textContent='No grupo, o mundo é de quem criou a sala. Seu progresso é salvo sozinho.';return}const b=document.getElementById('pzSaveBox');b.hidden=!b.hidden;pzArm=null;document.getElementById('pzNew').value='';document.getElementById('pzSaveMsg').textContent='O jogo continua salvando sozinho no mundo escolhido.';if(!b.hidden)renderSaveBox()});
+document.getElementById('pzSlots').addEventListener('click',e=>{const b=e.target.closest('[data-slot]');if(!b)return;audio();const sl=b.dataset.slot,cur=slotName||seedStr;
+  if(sl!==cur&&pzArm!==sl){pzArm=sl;renderSaveBox();document.getElementById('pzSaveMsg').textContent=`Toque de novo para trocar o save "${sl}" por este jogo.`;return}
+  slotName=sl;save();lsSet('mataviva:last',sl);pzArm=null;renderSaveBox();document.getElementById('pzSub').textContent=`${slotName} · dia ${dayN} · ${ptTxt(playT)}`;document.getElementById('pzSaveMsg').textContent=`Salvo em "${sl}" às ${hm()}.`});
+document.getElementById('pzNewGo').addEventListener('click',()=>{audio();const nm=(document.getElementById('pzNew').value||'').trim().slice(0,24);const msg=document.getElementById('pzSaveMsg');if(!nm){msg.textContent='Escreva um nome para o novo save.';return}
+  if(listSaves().some(v=>v.seed===nm)){msg.textContent=`Já existe "${nm}". Escolha outro nome ou use "Salvar por cima" na lista.`;return}
+  slotName=nm;save();lsSet('mataviva:last',nm);document.getElementById('pzNew').value='';renderSaveBox();document.getElementById('pzSub').textContent=`${slotName} · dia ${dayN} · ${ptTxt(playT)}`;msg.textContent=`Novo save "${nm}" criado às ${hm()}. Daqui pra frente o jogo salva nele.`});
 document.getElementById('pzMenu').addEventListener('click',()=>{audio();if(mp.on){const lv=document.getElementById('mpLeave');if(lv)lv.click()}setSpeed(1);goTitle()});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&!inTitle&&!mp.on&&!fainted)openPause()});
 function titleCam(ts){const hw=vw/2/zoom,hh=vh/2/zoom;cam.x=clamp(P.x+Math.sin(ts/9000)*220,hw,W*T-hw);cam.y=clamp(P.y+Math.cos(ts/12000)*130,hh,H*T-hh)}
@@ -3641,7 +3661,7 @@ let last=0;
 function loop(ts){const dt=Math.min(.05,last?(ts-last)/1000:.016);last=ts;if(inTitle){time+=dt;titleCam(ts)}else if(!paused||mp.on)update(dt);render();if(!gal.hidden)drawJournalAnim();requestAnimationFrame(loop)}
 addEventListener('pagehide',()=>save());
 document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
-buildSprites();buildIcons();buildStructSprites();buildPieceIcons();resize();wxLabel();{const b=bestSave();generate(b?b.seed:'ipe-amarelo')}titleShow('main');document.body.classList.add('intitle');requestAnimationFrame(loop);
+registerKits();buildSprites();buildIcons();buildStructSprites();buildPieceIcons();for(const p of PIECES)if(kitOk(p))ICON[kitId(p)]=ICON['p_'+p.id];resize();wxLabel();{const b=bestSave();generate(b?b.sd:'ipe-amarelo',b?b.seed:'ipe-amarelo')}titleShow('main');document.body.classList.add('intitle');requestAnimationFrame(loop);
 })();
 </script>
 </body></html>
