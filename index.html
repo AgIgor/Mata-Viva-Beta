@@ -402,7 +402,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(-
       <p>Tudo fica salvo neste navegador, sozinho, a cada poucos segundos.</p>
       <button class="btn" type="button" data-tback>Voltar</button>
     </div>
-    <p class="ttl-ver">Versão 1.36 · teste</p>
+    <p class="ttl-ver">Versão 1.37 · teste</p>
   </div>
 </div>
 <div id="lookP" hidden role="dialog" aria-label="Personagem">
@@ -459,7 +459,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(-
 
 <div id="build" hidden role="dialog" aria-label="Construir">
   <div class="sheet">
-    <div class="sheet-h"><div><h2>Construir</h2><span>Escolha uma peça e toque no chão para posicionar</span></div><button class="btn" id="buildClose" type="button">Fechar</button></div>
+    <div class="sheet-h"><div><h2>Construir</h2><span>Coloque no chão as peças que estão na mochila</span></div><button class="btn" id="buildClose" type="button">Fechar</button></div>
     <div class="recipes" id="pieces"></div>
   </div>
 </div>
@@ -1983,32 +1983,37 @@ function recCard(r){const ok=canCraft(r),mats=hasMats(r.need);
 function repCard(id){const tl=TOOLS[id],w=wearOf(id),ok=w<tl.max&&hasMats(tl.rep);
   return`<div class="rec"><div class="rec-h"><img src="${ICON[id]}" alt=""><div><b>Reparar ${ITEMS[id].toLowerCase()}</b><span>${w}/${tl.max} golpes restantes</span></div></div><div class="need">${tl.rep.map(([it,n])=>chip(it,n)).join('')}</div><button class="btn" type="button" data-repair="${id}"${ok?'':' disabled'}>${w>=tl.max?'Já está novo':ok?'Reparar':'Faltam materiais'}</button></div>`}
 const sec=t=>`<p class="sec" style="grid-column:1/-1">${t}</p>`;
-let craftMode='hand',stationI=-1;
-function openStation(i){const k=blockG[i];if(k!==3&&k!==4)return;stationI=i;craftMode=k===3?'fire':'bench';craftEl.hidden=false;bagEl.hidden=true;buildEl.hidden=true;renderCraft()}
+let craftMode='hand',stationI=-1,craftTab='all',craftOnly=false;
+const HANDP=new Set([1,2,3,4,6,10,14,20,47,49,50,59]),MAQK=new Set([7,8,9,12,16,17,18,19,30,32,33,34,35,52,54,55,56,57,58]);
+const CRAFTCATS=[['ferr','Ferramentas e armas'],['roupa','Roupas'],['comida','Comida e remédios'],['mat','Materiais'],['obra','Construções'],['maq','Máquinas']];
+function recipeCat(id){const c=itemCat(id);return c==='ferr'||c==='roupa'?c:c==='comida'||c==='remedio'?'comida':'mat'}
+function kitCard(p){const lk=!eraOk(p.era),m=matMany(p),have=inv[kitId(p)]||0;
+  return`<div class="rec"><div class="rec-h"><img src="${ICON['p_'+p.id]}" alt=""><div><b>${p.name}</b><span>Na mochila: ${have}</span></div></div><p>${p.desc}</p><div class="need">${p.cost.map(([id,n])=>chip(id,n)).join('')}</div><div class="btnrow"><button class="btn" type="button" data-make="${p.k}"${m>0&&!lk?'':' disabled'}>${lk?'Bloqueada':m>0?'Criar':'Faltam materiais'}</button>${m>=5&&!lk?`<button class="btn ghostbtn" type="button" data-make="${p.k}" data-n="5">Criar 5</button>`:''}</div></div>`}
+function openStation(i){const k=blockG[i];if(k!==3&&k!==4)return;stationI=i;craftMode=k===3?'fire':'bench';craftTab='all';craftEl.hidden=false;bagEl.hidden=true;buildEl.hidden=true;renderCraft()}
 function renderCraft(){
   const nb=nearBench(),mode=craftMode;document.getElementById('craftTitle').textContent=mode==='fire'?'Fogueira':mode==='bench'?'Bancada de trabalho':'Criar';
-  document.getElementById('craftSub').textContent=mode==='fire'?(nearFire?'Fogo aceso · assar, cozinhar e ferver':'Fogo apagado pela chuva · faça um telhado em cima'):mode==='bench'?'Tudo o que dá para criar: receitas de bancada e à mão, mais os reparos':'Receitas à mão · toque na bancada ou na fogueira para as outras';
+  document.getElementById('craftSub').textContent=mode==='fire'?(nearFire?'Fogo aceso · assar, cozinhar e ferver':'Fogo apagado pela chuva · faça um telhado em cima'):mode==='bench'?'Todas as receitas: ferramentas, roupas, armas, construções e máquinas, mais os reparos':'Receitas simples, feitas à mão · a bancada tem todas';
   const tools=Object.keys(TOOLS).filter(id=>inv[id]>0);let h='';
   if(mode==='fire'){h+=sec('Fogueira')+(nearFire?COOK.map(c=>{const tl=!c.tool||inv[c.tool]>0,ok=hasMats(c.need)&&tl;
       return`<div class="rec"><div class="rec-h"><img src="${ICON[c.out]}" alt=""><div><b>${ITEMS[c.out]}</b><span>Você tem ${inv[c.out]||0}</span></div></div><p>${c.tool?'Ferve a água do rio na panela: fica segura para beber.':`Comendo: ${foodText(c.out)}`}</p><div class="need">${c.need.map(([id,n])=>chip(id,n)).join('')}${c.tool?chip(c.tool,1):''}</div><button class="btn" type="button" data-cook="${c.out}"${ok?'':' disabled'}>${ok?(c.verb||'Assar'):!tl?'Precisa de panela':'Faltam materiais'}</button></div>`}).join(''):'<p class="emptymsg">A chuva apagou o fogo. Espere passar ou faça um telhado de palha em cima da fogueira.</p>');
     recipesEl.innerHTML=h;return}
-  if(mode==='bench'){for(const[e,name]of ERAS){const rs=RECIPES.filter(r=>r.era===e&&r.st==='bench').concat(RECIPES.filter(r=>r.era===e&&!r.st)),ok=eraOk(e);if(!rs.length&&ok)continue;h+=sec(ok?name:`${name} · bloqueada`);if(!ok){h+=`<p class="emptymsg">${ERA_HINT[e]}.</p>`;continue}h+=rs.map(recCard).join('')}
-    h+=sec('Reparos')+(tools.length?tools.map(repCard).join(''):'<p class="emptymsg">Nenhuma ferramenta para reparar.</p>');recipesEl.innerHTML=h;return}
-  for(const[e,name]of ERAS){const rs=RECIPES.filter(r=>r.era===e&&!r.st),ok=eraOk(e);
-    h+=sec(ok?name:`${name} · bloqueada`);
-    if(!ok)h+=`<p class="emptymsg">${ERA_HINT[e]}.</p>`;
-    if(e==='vapor'&&ok&&!rs.length)h+='<p class="emptymsg">Construa a caldeira e a máquina a vapor na tela Construir.</p>';
-    h+=rs.map(recCard).join('');}
-  h+='<p class="emptymsg">Ferramentas de metal, roupas de couro, armas e reparos ficam na <b>bancada de trabalho</b>; comida e chás, na <b>fogueira</b>. Toque nelas para abrir o menu de cada uma.</p>';recipesEl.innerHTML=h;return;
-  h+=sec('Fogueira')+(nearFire?COOK.map(c=>{const tl=!c.tool||inv[c.tool]>0,ok=hasMats(c.need)&&tl;
-      return`<div class="rec"><div class="rec-h"><img src="${ICON[c.out]}" alt=""><div><b>${ITEMS[c.out]}</b><span>Você tem ${inv[c.out]||0}</span></div></div><p>${c.tool?'Ferve a água do rio na panela: fica segura para beber.':`Comendo: ${foodText(c.out)}`}</p><div class="need">${c.need.map(([id,n])=>chip(id,n)).join('')}${c.tool?chip(c.tool,1):''}</div><button class="btn" type="button" data-cook="${c.out}"${ok?'':' disabled'}>${ok?(c.verb||'Assar'):!tl?'Precisa de panela':'Faltam materiais'}</button></div>`}).join('')
-      :'<p class="emptymsg">Fique perto de uma fogueira acesa para assar comida. Comida assada mata mais a fome e dá energia.</p>');
+  const bench=mode==='bench',eo=e=>ERAS.findIndex(q=>q[0]===e);
+  const ents=[];for(const r of RECIPES){if(r.st==='bench'&&!bench)continue;ents.push({kind:'r',r,era:r.era,cat:recipeCat(r.out),ok:canCraft(r)})}
+  for(const p of PIECES){if(!kitOk(p)||p.grp==='plant')continue;const hand=HANDP.has(p.k);if(!hand&&!bench)continue;ents.push({kind:'p',p,era:p.era,cat:MAQK.has(p.k)?'maq':'obra',ok:eraOk(p.era)&&matMany(p)>0})}
+  const cats=CRAFTCATS.filter(([k])=>ents.some(e=>e.cat===k));if(craftTab!=='all'&&!cats.some(c=>c[0]===craftTab))craftTab='all';
+  h+=`<div class="invtabs" style="grid-column:1/-1"><button type="button" data-ctab="all" aria-pressed="${craftTab==='all'}">Tudo</button>${cats.map(([k,n])=>`<button type="button" data-ctab="${k}" aria-pressed="${craftTab===k}">${n} <b>${ents.filter(e=>e.cat===k&&e.ok).length}</b></button>`).join('')}<button type="button" data-conly="1" aria-pressed="${craftOnly}">Só o que dá</button></div>`;
+  for(const[k,n]of cats){if(craftTab!=='all'&&craftTab!==k)continue;let es=ents.filter(e=>e.cat===k&&(!craftOnly||e.ok));if(!es.length)continue;
+    es.sort((x,y)=>(eraOk(y.era)-eraOk(x.era))||(y.ok-x.ok)||(eo(x.era)-eo(y.era)));const unl=es.filter(e=>eraOk(e.era)),lk=es.filter(e=>!eraOk(e.era));
+    h+=sec(n)+unl.map(e=>e.kind==='r'?recCard(e.r):kitCard(e.p)).join('');
+    if(lk.length)h+=`<p class="emptymsg" style="grid-column:1/-1">Mais ${lk.length} receita${lk.length>1?'s':''} nas próximas eras: ${[...new Set(lk.map(e=>ERAS[eo(e.era)][1].toLowerCase()))].join(', ')}.</p>`}
+  if(bench)h+=sec('Reparos')+(tools.length?tools.map(repCard).join(''):'<p class="emptymsg">Nenhuma ferramenta para reparar.</p>');
+  else h+='<p class="emptymsg" style="grid-column:1/-1">Aqui ficam as receitas simples, feitas à mão. A <b>bancada de trabalho</b> tem estas e mais as de metal, roupas, armas e máquinas. Comida e chás ficam na <b>fogueira</b>.</p>';
   recipesEl.innerHTML=h;
 }
-function toggleCraft(){craftEl.hidden=!craftEl.hidden;craftMode='hand';stationI=-1;if(!craftEl.hidden){bagEl.hidden=true;buildEl.hidden=true;renderCraft()}}
+function toggleCraft(){craftEl.hidden=!craftEl.hidden;craftMode='hand';stationI=-1;craftTab='all';if(!craftEl.hidden){bagEl.hidden=true;buildEl.hidden=true;renderCraft()}}
 craftBtn.addEventListener('click',toggleCraft);
 document.getElementById('craftClose').addEventListener('click',()=>{craftEl.hidden=true});
-recipesEl.addEventListener('click',e=>{const b=e.target.closest('[data-craft]');if(b&&!b.disabled){audio();dispatch({t:'craft',id:b.dataset.craft})}
+recipesEl.addEventListener('click',e=>{const tb=e.target.closest('[data-ctab]');if(tb){audio();craftTab=tb.dataset.ctab;renderCraft();return}if(e.target.closest('[data-conly]')){audio();craftOnly=!craftOnly;renderCraft();return}const mk=e.target.closest('[data-make]');if(mk&&!mk.disabled){audio();for(let q=0;q<(+mk.dataset.n||1);q++)makeKit(+mk.dataset.make);renderCraft();return}const b=e.target.closest('[data-craft]');if(b&&!b.disabled){audio();dispatch({t:'craft',id:b.dataset.craft})}
   const rp=e.target.closest('[data-repair]');if(rp&&!rp.disabled){audio();dispatch({t:'repair',id:rp.dataset.repair})}
   const ck=e.target.closest('[data-cook]');if(ck&&!ck.disabled){audio();dispatch({t:'cook',id:ck.dataset.cook})}});
 function craft(id){
@@ -2031,17 +2036,18 @@ function setBuild(p){
 function refreshBuildbar(){if(!bmode)return;document.getElementById('bbImg').src=ICON['p_'+bmode.id];document.getElementById('bbName').textContent=bmode.name;
   document.getElementById('bbInfo').textContent=bmode.k===40?(inv.enxada>0?`Enxada: ${wearOf('enxada')} usos · ${coarse?'toque':'clique'} no chão`:'Sem enxada'):bmode.k===99?(coarse?'Toque numa peça e segure Remover':'Clique numa peça para remover'):bmode.k===98?(movSrc<0?(coarse?'Toque na construção que quer mover':'Clique na construção que quer mover'):`Levando: ${(pieceByK(blockG[movSrc])||{}).name||''} · toque no lugar novo`):(coarse?`Dá para fazer ${howMany(bmode)} · toque no chão`:`Dá para fazer ${howMany(bmode)} · clique no chão`)}
 function renderPieces(){
-  const grp=[['pedra','Era da pedra · abrigo e oficina'],['sitio','Sítio · pesca, abelhas e criação'],['cobre','Era do cobre · força da água'],['ferro','Era do ferro · carvão e bombas'],['vapor','Era do vapor'],['eletrica','Era elétrica · dínamo e luz']];
-  const card=p=>{const lk=!eraOk(p.era),noHoe=p.k===40&&!(inv.enxada>0),ok=p.k===99||p.k===98||(!lk&&!noHoe&&affordable(p));
-    return`<div class="rec"><div class="rec-h"><img src="${ICON['p_'+p.id]}" alt=""${lk?' style="opacity:.45"':''}><div><b>${p.name}</b><span>${p.k===99||p.k===98?'Sem custo':lk?ERA_HINT[p.era]:p.k===40?(inv.enxada>0?`Enxada: ${wearOf('enxada')} usos`:'Crie uma enxada primeiro'):`Dá para fazer ${howMany(p)}`}</span></div></div><p>${p.desc}</p>${p.cost.length?`<div class="need">${p.cost.map(([id,n])=>chip(id,n)).join('')}</div>`:''}${kitOk(p)&&!lk?`<div class="btnrow"><button class="btn" type="button" data-make="${p.k}"${matMany(p)>0?'':' disabled'}>${matMany(p)>0?'Criar · vai para a mochila':'Faltam materiais'}</button>${inv[kitId(p)]>0?`<button class="btn ghostbtn" type="button" data-piece="${p.k}">Colocar · tem ${inv[kitId(p)]}</button>`:''}</div>`:`<button class="btn" type="button" data-piece="${p.k}"${ok?'':' disabled'}>${ok?'Escolher':lk?'Bloqueada':noHoe?'Precisa de enxada':'Faltam materiais'}</button>`}</div>`};
-  piecesEl.innerHTML=grp.map(([e,t])=>sec(e==='plant'||e==='sitio'||eraOk(e)?t:t+' · bloqueada')+PIECES.filter(p=>e==='plant'||e==='sitio'?p.grp===e:p.era===e&&p.k!==99&&p.k!==98&&!p.grp).map(card).join('')).join('')+sec('Ferramentas')+card(pieceByK(98))+card(pieceByK(99));
+  const card=(p,n,extra)=>`<div class="rec"><div class="rec-h"><img src="${ICON['p_'+p.id]}" alt=""><div><b>${p.name}</b><span>${extra||`Na mochila: ${n}`}</span></div></div><p>${p.desc}</p><button class="btn" type="button" data-piece="${p.k}">${p.k===99?'Desmontar':p.k===98?'Mover':'Colocar'}</button></div>`;
+  const kits=PIECES.filter(p=>kitOk(p)&&inv[kitId(p)]>0),loose=[31,53].map(pieceByK).filter(p=>p&&eraOk(p.era)&&(inv[p.cost[0][0]]||0)>0);
+  let h=sec('Para colocar')+(kits.length||loose.length?kits.map(p=>card(p,inv[kitId(p)])).join('')+loose.map(p=>card(p,0,`${inv[p.cost[0][0]]} na mochila`)).join(''):'<p class="emptymsg" style="grid-column:1/-1">Nenhuma peça na mochila. Crie paredes, fogueira, bancada e outras na <b>Oficina · Criar</b>; máquinas e peças de metal, na <b>bancada de trabalho</b>.</p><button class="btn" type="button" data-opencraft="1" style="grid-column:1/-1;justify-self:start">Abrir a Oficina</button>');
+  h+=sec('Ferramentas')+card(pieceByK(98),0,'Troca uma construção de lugar')+card(pieceByK(99),0,'Devolve a peça para a mochila');
+  piecesEl.innerHTML=h;
 }
 function makeKit(k){const p=pieceByK(k);if(!kitOk(p)||matMany(p)<1)return;for(const[id,n]of p.cost){inv[id]-=n;if(inv[id]<=0)delete inv[id]}inv[kitId(p)]=(inv[kitId(p)]||0)+1;gotItem(kitId(p),1);
-  floats.push({x:P.x,y:P.y-72,text:`+1 ${p.name} na mochila`,life:1.6});play('craft');save();updateBar();renderPieces();if(!bagEl.hidden)renderBag()}
+  floats.push({x:P.x,y:P.y-72,text:`+1 ${p.name} na mochila`,life:1.6});play('craft');save();updateBar();if(!buildEl.hidden)renderPieces();if(!bagEl.hidden)renderBag()}
 function toggleBuild(){buildEl.hidden=!buildEl.hidden;if(!buildEl.hidden){bagEl.hidden=true;craftEl.hidden=true;renderPieces()}}
 document.getElementById('buildBtn').addEventListener('click',toggleBuild);
 document.getElementById('buildClose').addEventListener('click',()=>{buildEl.hidden=true});
-piecesEl.addEventListener('click',e=>{const mk=e.target.closest('[data-make]');if(mk&&!mk.disabled){audio();makeKit(+mk.dataset.make);return}const b=e.target.closest('[data-piece]');if(b&&!b.disabled){setBuild(pieceByK(+b.dataset.piece));buildEl.hidden=true}});
+piecesEl.addEventListener('click',e=>{if(e.target.closest('[data-opencraft]')){audio();buildEl.hidden=true;toggleCraft();return}const b=e.target.closest('[data-piece]');if(b&&!b.disabled){setBuild(pieceByK(+b.dataset.piece));buildEl.hidden=true}});
 document.getElementById('bbSwap').addEventListener('click',toggleBuild);
 let bDir=0;
 function rotLabel(){document.getElementById('bbRot').textContent=bmode&&(bmode.k===34||bmode.k===35)?`Girar ${'→↓←↑'[bDir]}`:bRot==='H'?'Girar ↔':'Girar ↕'}
@@ -3509,10 +3515,10 @@ const GUIDE=[
   b:()=>`<p>${K('<kbd>WASD</kbd> anda e <kbd>Shift</kbd> corre.','Arraste o dedo em qualquer lugar da tela para andar. Pinça aproxima e afasta.')}</p><p>Chegue perto de árvores, pedras e plantas e ${K('segure <kbd>E</kbd>','segure o botão de ação')} para coletar. O botão mostra o que vai acontecer.</p><p><b>Toque ou clique direto</b> no que quer usar: árvore, pedra, fornalha, baú, morador, canoa. Se estiver longe, chegue mais perto.</p><p>O botão de ação dá prioridade ao que está na sua frente. Comer, beber e soltar ficam no <b>botão menor</b> ao lado${K(' (tecla <kbd>F</kbd>)','')}.</p><p>Ferramentas, comida e sementes só funcionam <b>na mão</b>: ${K('aperte <kbd>1</kbd>–<kbd>9</kbd>','toque no item na barra de baixo')}. Tocar de novo guarda o item.</p>`,
   trig:()=>true},
  {id:'criar',cat:'Começo',icon:'corda',t:'Criar ferramentas',
-  b:()=>`<p>Abra <b>Oficina · Criar</b> ${K('(<kbd>C</kbd>)','')}. Comece por <b>corda</b> (3 fibras de helicônia ou buriti), depois <b>machado</b> e <b>picareta</b> de pedra.</p><p>Toque num ingrediente para ver o nome e onde achar.</p><p>A <b>bancada de trabalho</b> e a <b>fogueira</b> têm menu próprio, como a fornalha: chegue perto e toque nelas. Na bancada: metal, roupas, armas e consertos. Na fogueira: assar, cozinhar, chás e queijo.</p>`,
+  b:()=>`<p>Abra <b>Oficina · Criar</b> ${K('(<kbd>C</kbd>)','')}. Comece por <b>corda</b> (3 fibras de helicônia ou buriti), depois <b>machado</b> e <b>picareta</b> de pedra.</p><p>Toque num ingrediente para ver o nome e onde achar.</p><p>A <b>Oficina</b> tem só as receitas simples. A <b>bancada de trabalho</b> tem todas: as simples e mais metal, roupas, armas, máquinas e consertos. A <b>fogueira</b> é para cozinhar. Chegue perto e toque nelas para abrir.</p>`,
   trig:()=>(inv.madeira||0)>=2},
  {id:'construir',cat:'Começo',icon:'p_wall',t:'Construir a base',
-  b:()=>`<p>Em <b>Obras · Construir</b> ${K('(<kbd>B</kbd>)','')} escolha a peça e toque no chão. Peças verdes cabem; vermelhas não.</p><ul><li><b>Fogueira</b>: luz, calor e cozinha.</li><li><b>Cama</b>: dorme à noite e vira ponto de retorno.</li><li><b>Telhado</b>: abrigo da chuva e do granizo.</li></ul><p><b>Desmontar</b> devolve todo o material.</p>`,
+  b:()=>`<p>Como no Minecraft: primeiro você <b>cria a peça</b> (parede, fogueira, cama…) na <b>Oficina · Criar</b> ${K('(<kbd>C</kbd>)','')} ou na bancada, e ela vai para a mochila. Depois toque nela na barra, ou abra <b>Obras · Construir</b> ${K('(<kbd>B</kbd>)','')}, e toque no chão. Verde cabe; vermelho não.</p><ul><li><b>Fogueira</b>: luz, calor e cozinha.</li><li><b>Cama</b>: dorme à noite e vira ponto de retorno.</li><li><b>Telhado</b>: abrigo da chuva e do granizo.</li></ul><p><b>Desmontar</b> devolve a peça para a mochila e <b>Mover</b> troca de lugar.</p>`,
   trig:()=>(stats.got.madeira||0)>=6},
  {id:'noite',cat:'Sobreviver',icon:'tocha',t:'A primeira noite',
   b:()=>`<p>À noite esfria e a <b>onça</b> sai para caçar. Ela tem medo de fogo.</p><ul><li>Fique perto da fogueira ou segure uma <b>tocha</b> na mão.</li><li>Durma na cama para pular até o amanhecer.</li></ul>`,
